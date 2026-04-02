@@ -1,5 +1,6 @@
 package com.fitoherb.fitoherb_backend_v2.infra.security;
 
+import com.fitoherb.fitoherb_backend_v2.exceptions.InvalidTokenException;
 import com.fitoherb.fitoherb_backend_v2.repositories.UserRepository;
 import com.fitoherb.fitoherb_backend_v2.services.TokenService;
 import jakarta.servlet.FilterChain;
@@ -25,24 +26,22 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        var token = this.recoverToken(request);
-
-        if (token != null) {
-            var email = tokenService.validateToken(token);
-
-            userRepository.findByEmail(email).ifPresent(user -> {
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        user,
-                        null,
-                        user.getAuthorities()
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            });
+        try {
+            var token = this.recoverToken(request);
+            if (token != null) {
+                var email = tokenService.validateToken(token);
+                userRepository.findByEmail(email).ifPresent(user -> {
+                    var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                });
+            }
+            filterChain.doFilter(request, response);
+        } catch (InvalidTokenException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json");
+            response.getWriter().write("{ \"status\": \"401 UNAUTHORIZED\", \"message\": \"" + e.getMessage() + "\" }");
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private String recoverToken(HttpServletRequest request) {

@@ -1,9 +1,6 @@
 package com.fitoherb.fitoherb_backend_v2.infra.exceptions;
 
-import com.fitoherb.fitoherb_backend_v2.exceptions.InvalidCredentialsException;
-import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceNotFoundException;
-import com.fitoherb.fitoherb_backend_v2.exceptions.UnauthorizedAccessException;
-import com.fitoherb.fitoherb_backend_v2.exceptions.UserAlreadyExistsException;
+import com.fitoherb.fitoherb_backend_v2.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -96,5 +93,11 @@ public class RestExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<RestErrorMessage> handleInvalidTokenException(InvalidTokenException ex) {
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 }

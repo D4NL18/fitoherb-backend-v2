@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
+import com.fitoherb.fitoherb_backend_v2.exceptions.InvalidTokenException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class TokenService {
                     .sign(algorithm);
             return token;
         }catch (JWTVerificationException exception) {
-            throw new RuntimeException("Error generating token JWT", exception);
+            throw new InvalidTokenException("Error generating token JWT");
         }
     }
 
@@ -40,7 +41,7 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
         }catch (JWTVerificationException exception) {
-            throw new RuntimeException("Token JWT invalid or expired", exception);
+            throw new InvalidTokenException("Token JWT invalid or expired");
         }
     }
 
