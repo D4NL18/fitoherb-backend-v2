@@ -2,6 +2,7 @@ package com.fitoherb.fitoherb_backend_v2.services;
 
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.LoginReq;
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.RegisterReq;
+import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.LoginRes;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
 import com.fitoherb.fitoherb_backend_v2.mappers.AuthMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.UserRepository;
@@ -34,32 +35,28 @@ public class AuthorizationService implements UserDetailsService {
     @Autowired
     private AuthMapper authMapper;
 
+    @Autowired
+    private TokenService tokenService;
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email);
     }
 
-    public ResponseEntity login(LoginReq loginReq) {
+    public String login(LoginReq loginReq) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(loginReq.getEmail(), loginReq.getPassword());
         var auth = this.authManager.authenticate(usernamePassword);
-        return ResponseEntity.ok().build();
+        return tokenService.generateToken((User) auth.getPrincipal());
     }
 
-    public ResponseEntity register(RegisterReq registerReq) {
-        var userExistis = this.userRepository.findByEmail(registerReq.getEmail());
-
-        if (userExistis != null) {
+    public User register(RegisterReq registerReq) {
+        if (this.userRepository.findByEmail(registerReq.getEmail()) != null) {
             throw new UserAlreadyExistsException();
         }
-
         String encryptedPassword = this.passwordEncoder.encode(registerReq.getPassword());
-
         User newUser = authMapper.registerReqToEntity(registerReq);
-
         newUser.setPassword(encryptedPassword);
-
-        userRepository.save(newUser);
-        return ResponseEntity.ok().build();
+        return userRepository.save(newUser);
     }
 }
 
