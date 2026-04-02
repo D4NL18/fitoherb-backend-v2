@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -84,5 +85,16 @@ public class RestExceptionHandler {
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.METHOD_NOT_ALLOWED, message);
 
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(errorResponse);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<RestErrorMessage> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+
+        RestErrorMessage errorResponse = new RestErrorMessage(
+                HttpStatus.FORBIDDEN,
+                "Access denied: You do not have the necessary permissions to access this resource."
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 }
