@@ -29,6 +29,18 @@ public class UserController {
         return ResponseEntity.ok(userRes);
     }
 
+    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<Page<UserRes>> getAllUsersPaginated(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "name") String sortField,
+            @RequestParam(defaultValue = "ASC") String direction
+    ) {
+        Page<UserRes> users = this.userService.getAllUsers(search, page, sortField, direction);
+        return ResponseEntity.ok(users);
+    }
+
     @PreAuthorize("@authorizationService.isAdmin()")
     @PutMapping("/{email}")
     public ResponseEntity updateUserByEmail(
@@ -40,7 +52,7 @@ public class UserController {
     }
 
     @PreAuthorize("@authorizationService.isAuthenticated()")
-    @PutMapping("/update-password/{email}")
+    @PatchMapping("/update-password/{email}")
     public ResponseEntity<Void> updatePasswordByEmail(
             @PathVariable @Valid @Email @NotNull String email,
             @RequestBody @Valid PasswordUpdateReq passwordUpdateReq
@@ -57,18 +69,4 @@ public class UserController {
         this.userService.deleteUserByEmail(email);
         return ResponseEntity.ok().build();
     }
-
-    @PreAuthorize("@authorizationService.isAuthenticated()")
-    @GetMapping
-    public ResponseEntity<Page<UserRes>> getAllUsers(
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "name") String sortField,
-            @RequestParam(defaultValue = "ASC") String direction
-    ) {
-        Page<UserRes> users = this.userService.getAllUsers(search, page, sortField, direction);
-        return ResponseEntity.ok(users);
-    }
-
-
 }

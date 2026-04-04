@@ -14,6 +14,8 @@ public class ValidationConstants {
     // EXPRESSÕES REGULARES (REGEX)
     public static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&#]).*$";
     public static final String DATE_FORMAT = "dd-MM-yyyy";
+    public static final String SLUG_REGEX = "^[a-z0-9-]+$";
+
 
     // MENSAGENS PADRONIZADAS (MESSAGES)
 
@@ -33,5 +35,6 @@ public class ValidationConstants {
     // Senha
     public static final String MSG_PASSWORD_INVALID = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
 
-
+    // SLUG
+    public static final String MSG_SLUG_INVALID = "The slug must contain only lowercase letters, numbers, and hyphens";
 }

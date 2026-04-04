@@ -36,12 +36,10 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    private ResponseEntity<RestErrorMessage> userAlreadyExists(UserAlreadyExistsException exception) {
-
-        RestErrorMessage jsonDeResposta = new RestErrorMessage(HttpStatus.CONFLICT, exception.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(jsonDeResposta);
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<RestErrorMessage> handleResourceAlreadyExists(ResourceAlreadyExistsException exception) {
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

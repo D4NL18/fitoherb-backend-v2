@@ -57,8 +57,6 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
-        userMapper.updateEntityFromUserReq(userReq, user);
-
         try {
             userRepository.save(user);
         } catch (Exception e) {

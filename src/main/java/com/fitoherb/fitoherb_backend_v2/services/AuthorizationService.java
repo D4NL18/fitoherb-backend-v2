@@ -2,14 +2,13 @@ package com.fitoherb.fitoherb_backend_v2.services;
 
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.LoginReq;
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.RegisterReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.LoginRes;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
+import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
+import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
 import com.fitoherb.fitoherb_backend_v2.mappers.AuthMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.UserRepository;
-import com.fitoherb.fitoherb_backend_v2.exceptions.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -75,12 +74,17 @@ public class AuthorizationService implements UserDetailsService {
 
     public User register(RegisterReq registerReq) {
         if (this.userRepository.findByEmail(registerReq.getEmail()).isPresent()) {
-            throw new UserAlreadyExistsException();
+            throw new ResourceAlreadyExistsException("E-mail already in use");
         }
         String encryptedPassword = this.passwordEncoder.encode(registerReq.getPassword());
         User newUser = authMapper.registerReqToEntity(registerReq);
         newUser.setPassword(encryptedPassword);
-        return userRepository.save(newUser);
+        try {
+            return userRepository.save(newUser);
+
+        }catch (Exception e) {
+            throw new DatabaseOperationException("Failed to delete user. Ensure there are no records linked to this account.");
+        }
     }
 }
 
