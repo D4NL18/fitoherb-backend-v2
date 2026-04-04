@@ -100,4 +100,44 @@ public class RestExceptionHandler {
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.UNAUTHORIZED, ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
+
+    @ExceptionHandler(org.springframework.dao.InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<RestErrorMessage> handleInvalidDataAccess(org.springframework.dao.InvalidDataAccessApiUsageException ex) {
+        String message = "Invalid request: check if the sort field or query parameters are correct.";
+
+        if (ex.getMessage() != null && ex.getMessage().contains("Could not resolve attribute")) {
+            try {
+                String field = ex.getMessage().split("'")[1];
+                message = "Invalid sort field: " + field;
+            } catch (Exception ignored) {}
+        }
+
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.BAD_REQUEST, message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<RestErrorMessage> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        String message = String.format("The parameter '%s' should be of type '%s'", ex.getName(), ex.getRequiredType().getSimpleName());
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.BAD_REQUEST, message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<RestErrorMessage> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
+        String message = "Data integrity violation. This email might already be in use by another user.";
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, message);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<RestErrorMessage> handleGenericException(Exception ex) {
+        ex.printStackTrace();
+
+        RestErrorMessage errorResponse = new RestErrorMessage(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred. Please contact the administrator."
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
 }

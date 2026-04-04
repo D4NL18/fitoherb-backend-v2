@@ -1,15 +1,13 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.PasswordUpdateReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.RegisterReq;
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.UserReq;
 import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.UserRes;
 import com.fitoherb.fitoherb_backend_v2.services.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,6 +56,18 @@ public class UserController {
     ) {
         this.userService.deleteUserByEmail(email);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<Page<UserRes>> getAllUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "name") String sortField,
+            @RequestParam(defaultValue = "ASC") String direction
+    ) {
+        Page<UserRes> users = this.userService.getAllUsers(search, page, sortField, direction);
+        return ResponseEntity.ok(users);
     }
 
 

@@ -1,7 +1,6 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.PasswordUpdateReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.RegisterReq;
 import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.UserReq;
 import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.UserRes;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
@@ -12,6 +11,10 @@ import com.fitoherb.fitoherb_backend_v2.mappers.UserMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,18 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
         UserRes userRes = userMapper.entityToRes(user);
         return userRes;
+    }
+
+    public Page<UserRes> getAllUsers(String search, int page, String sortField, String direction) {
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, 10, Sort.by(sortDirection, sortField));
+
+        String searchTerm = (search == null) ? "" : search;
+        Page<User> userPage = userRepository.findAllFiltered(searchTerm, pageable);
+
+        return userPage.map(userMapper::entityToRes);
     }
 
     @Transactional
