@@ -74,7 +74,7 @@ public class AuthorizationService implements UserDetailsService {
     }
 
     public User register(RegisterReq registerReq) {
-        if (this.userRepository.findByEmail(registerReq.getEmail()) != null) {
+        if (this.userRepository.findByEmail(registerReq.getEmail()).isPresent()) {
             throw new UserAlreadyExistsException();
         }
         String encryptedPassword = this.passwordEncoder.encode(registerReq.getPassword());
