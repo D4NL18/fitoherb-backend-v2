@@ -58,12 +58,12 @@ public class ProductCategoryController {
     ResponseEntity<Void> createProductCategory(
             @RequestBody @Valid ProductCategoryReq categoryReq
     ) {
-        ProductCategory savedUser = productCategoryService.createProductCategory(categoryReq);
+        ProductCategory savedProductCategory = productCategoryService.createProductCategory(categoryReq);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(savedUser.getId())
+                .buildAndExpand(savedProductCategory.getId())
                 .toUri();
 
         return ResponseEntity.created(location).build();

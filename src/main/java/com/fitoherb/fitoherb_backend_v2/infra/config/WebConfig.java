@@ -1,0 +1,25 @@
+package com.fitoherb.fitoherb_backend_v2.infra.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Value("${path.supplierImages}")
+    private String supplierPath;
+
+    @Value("${path.productImages}")
+    private String productPath;
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/suppliers/**")
+                .addResourceLocations("file:" + supplierPath + "/");
+
+        registry.addResourceHandler("/uploads/products/**")
+                .addResourceLocations("file:" + productPath + "/");
+    }
+}
