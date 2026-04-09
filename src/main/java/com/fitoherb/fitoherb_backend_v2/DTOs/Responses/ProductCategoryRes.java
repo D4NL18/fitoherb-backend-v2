@@ -20,4 +20,6 @@ public class ProductCategoryRes {
     private String slug;
 
     private LocalDateTime createdAt;
+
+    private String imageUrl;
 }

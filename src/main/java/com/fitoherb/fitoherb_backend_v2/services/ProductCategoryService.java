@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,6 +29,9 @@ public class ProductCategoryService {
 
     @Autowired
     ProductCategoryMapper categoryMapper;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     public ProductCategoryRes getProductCategoryBySlug(String slug) {
         ProductCategory category = this.categoryRepository.findBySlug(slug)
@@ -54,7 +58,7 @@ public class ProductCategoryService {
     }
 
     @Transactional
-    public ProductCategory createProductCategory(ProductCategoryReq categoryReq) {
+    public ProductCategory createProductCategory(ProductCategoryReq categoryReq, MultipartFile image) {
         if(this.categoryRepository.findByName(categoryReq.getName()).isPresent()) {
             throw new ResourceAlreadyExistsException("Category with that name already exists");
         }
@@ -68,8 +72,14 @@ public class ProductCategoryService {
         }
         ProductCategory category = categoryMapper.reqToEntity(categoryReq);
 
+        String fileName = null;
+        if (image != null && !image.isEmpty()) {
+            fileName = fileStorageService.storeCategoryImage(image);
+        }
+
         try {
             category.setSlug(generatedSlug);
+            category.setImagePath(fileName);
             return categoryRepository.save(category);
         }catch (Exception e) {
             throw new DatabaseOperationException("Failed to create category.");
@@ -77,7 +87,7 @@ public class ProductCategoryService {
     }
 
     @Transactional
-    public void updateProductCategoryBySlug(ProductCategoryReq categoryReq, String slug) {
+    public void updateProductCategoryBySlug(ProductCategoryReq categoryReq, String slug, MultipartFile image) {
         ProductCategory category = this.categoryRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with slug: " + slug));
 
@@ -90,7 +100,11 @@ public class ProductCategoryService {
                 );
             }
         }
-
+        if (image != null && !image.isEmpty()) {
+            fileStorageService.deleteCategoryImage(category.getImagePath());
+            String newFileName = fileStorageService.storeCategoryImage(image);
+            category.setImagePath(newFileName);
+        }
         try {
             categoryMapper.updateEntityFromReq(categoryReq, category);
             category.setSlug(generatedSlug);
@@ -106,6 +120,7 @@ public class ProductCategoryService {
         ProductCategory category = this.categoryRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with slug: " + slug));
         try {
+            fileStorageService.deleteCategoryImage(category.getImagePath());
             this.categoryRepository.delete(category);
         }catch(Exception e) {
             throw new DatabaseOperationException("Failed to delete category. Ensure there are no records linked to this account.");

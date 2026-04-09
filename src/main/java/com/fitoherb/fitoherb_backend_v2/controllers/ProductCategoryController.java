@@ -9,9 +9,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.*;
@@ -54,11 +56,13 @@ public class ProductCategoryController {
     }
 
     @PreAuthorize("@authorizationService.isAdmin()")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> createProductCategory(
-            @RequestBody @Valid ProductCategoryReq categoryReq
+            @RequestPart("product_category") @Valid ProductCategoryReq categoryReq,
+            @RequestPart(value = "image", required = true) MultipartFile image
+
     ) {
-        ProductCategory savedProductCategory = productCategoryService.createProductCategory(categoryReq);
+        ProductCategory savedProductCategory = productCategoryService.createProductCategory(categoryReq, image);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -70,12 +74,13 @@ public class ProductCategoryController {
     }
 
     @PreAuthorize("@authorizationService.isAdmin()")
-    @PutMapping("/{slug}")
+    @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> updateProductCategoryBySlug(
-            @RequestBody @Valid ProductCategoryReq categoryReq,
+            @RequestPart("product_category") @Valid ProductCategoryReq categoryReq,
+            @RequestPart(value = "image", required = true) MultipartFile image,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
-        productCategoryService.updateProductCategoryBySlug(categoryReq, slug);
+        productCategoryService.updateProductCategoryBySlug(categoryReq, slug, image);
         return ResponseEntity.ok().build();
     }
 
