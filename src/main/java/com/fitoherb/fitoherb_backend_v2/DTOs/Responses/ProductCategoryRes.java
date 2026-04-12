@@ -24,8 +24,8 @@ public class ProductCategoryRes {
     @Schema(description = "SEO-friendly unique identifier used in URLs", example = "chas-e-infusoes")
     private String slug;
 
-    @Schema(description = "Timestamp of when the category was created", example = "2026-04-12T14:30:00")
-    private LocalDateTime createdAt;
+    @Schema(description = "Formatted timestamp of category creation", example = "12-04-2026 14:30:00")
+    private String createdAt;
 
     @Schema(description = "Full URL to the category's illustrative image", example = "https://api.fitoherb.com/storage/categories/chas.png")
     private String imageUrl;

@@ -21,8 +21,8 @@ public class SupplierRes {
     @Schema(description = "SEO-friendly unique identifier used in URLs", example = "fitoherb-natural-ltda")
     private String slug;
 
-    @Schema(description = "Timestamp of when the supplier was registered", example = "2026-04-12T10:15:30")
-    private LocalDateTime createdAt;
+    @Schema(description = "Formatted timestamp of supplier registration", example = "12-04-2026 10:15:30")
+    private String createdAt;
 
     @Schema(description = "Full URL to the supplier's logo or branding image", example = "https://api.fitoherb.com/storage/suppliers/fitoherb-logo.png")
     private String imageUrl;

@@ -22,7 +22,7 @@ public class UserRes {
     @Schema(description = "User's full name", example = "Daniel Marinho")
     private String name;
 
-    @Schema(description = "User's date of birth", example = "1995-10-25")
+    @Schema(description = "User's date of birth", example = "25-10-1995")
     private LocalDate birthDate;
 
     @Schema(description = "User's access role in the system", example = "ADMIN")

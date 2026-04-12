@@ -11,6 +11,7 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring", uses = {ProductCategoryMapper.class, SupplierMapper.class})
 public interface ProductMapper {
 
+    @Mapping(target = "createdAt", dateFormat = "dd-MM-yyyy HH:mm:ss")
     @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toProductPublicUrl")
     ProductRes entityToRes(Product product);
 

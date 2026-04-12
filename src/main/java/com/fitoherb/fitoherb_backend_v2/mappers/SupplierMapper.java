@@ -13,6 +13,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface SupplierMapper {
 
+    @Mapping(target = "createdAt", dateFormat = "dd-MM-yyyy HH:mm:ss")
     @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toPublicUrl")
     SupplierRes entityToRes(Supplier supplier);
 

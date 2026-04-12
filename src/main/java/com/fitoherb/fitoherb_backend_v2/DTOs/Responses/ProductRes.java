@@ -27,4 +27,7 @@ public class ProductRes {
 
     @Schema(description = "Details of the manufacturer or vendor of the product")
     private SupplierRes supplier;
+
+    @Schema(description = "Formatted timestamp of product registration", example = "12-04-2026 15:00:00")
+    private String createdAt;
 }

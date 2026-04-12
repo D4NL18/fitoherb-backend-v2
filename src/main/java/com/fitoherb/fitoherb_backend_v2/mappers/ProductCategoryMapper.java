@@ -12,6 +12,7 @@ public interface ProductCategoryMapper {
 
     ProductCategory resToEntity(ProductCategoryRes categoryRes);
 
+    @Mapping(target = "createdAt", dateFormat = "dd-MM-yyyy HH:mm:ss")
     @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toPublicUrl")
     ProductCategoryRes entityToRes(ProductCategory category);
 
