@@ -123,7 +123,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<RestErrorMessage> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
-        String message = "Data integrity violation. This email might already be in use by another user.";
+        String message = "Data integrity violation. Resource already being used.";
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, message);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }

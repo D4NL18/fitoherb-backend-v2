@@ -1,9 +1,9 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.SupplierReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.SupplierRes;
-import com.fitoherb.fitoherb_backend_v2.entities.Supplier;
-import com.fitoherb.fitoherb_backend_v2.services.SupplierService;
+import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.ProductReq;
+import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.ProductRes;
+import com.fitoherb.fitoherb_backend_v2.entities.Product;
+import com.fitoherb.fitoherb_backend_v2.services.ProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,55 +18,62 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.*;
 
 @RestController
-@RequestMapping("suppliers")
-public class SupplierController {
-    @Autowired
-    SupplierService supplierService;
+@RequestMapping("products")
+public class ProductController {
 
-    @GetMapping("/get-all")
-    ResponseEntity<List<SupplierRes>> getAllSuppliers() {
-        List<SupplierRes> suppliersList = this.supplierService.getAllSuppliers();
-        return ResponseEntity.ok(suppliersList);
-    }
+    @Autowired
+    ProductService productService;
 
     @PreAuthorize("@authorizationService.isAdmin()")
     @GetMapping("/{slug}")
-    ResponseEntity<SupplierRes> getSupplierBySlug(
+    ResponseEntity<ProductRes> getProductBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
-        SupplierRes supplierRes = this.supplierService.getSupplierBySlug(slug);
-        return ResponseEntity.ok(supplierRes);
+        ProductRes productRes = productService.getProductBySlug(slug);
+        return ResponseEntity.ok(productRes);
     }
 
     @PreAuthorize("@authorizationService.isAuthenticated()")
     @GetMapping
-    ResponseEntity<Page<SupplierRes>> getAllSuppliersPaginated(
+    ResponseEntity<Page<ProductRes>> getAllProductsPaginated(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "name") String sortField,
             @RequestParam(defaultValue = "ASC") String direction
     ) {
-        Page<SupplierRes> suppliers = this.supplierService.getAllSuppliersPaginated(search, page, sortField, direction);
-        return ResponseEntity.ok(suppliers);
+        Page<ProductRes> products = this.productService.getAllProductsPaginated(search, page, sortField, direction);
+        return ResponseEntity.ok(products);
     }
+
+    @GetMapping("/gallery")
+    public ResponseEntity<Page<ProductRes>> getProductGallery(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String supplier,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "ASC") String direction
+    ) {
+        Page<ProductRes> products = productService.getProductGallery(search, category, supplier, page, direction);
+        return ResponseEntity.ok(products);
+    }
+
 
     @PreAuthorize("@authorizationService.isAdmin()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> createSupplier(
-            @RequestPart("supplier") @Valid SupplierReq supplierReq,
-            @RequestPart(value = "image", required = true) MultipartFile image
+    ResponseEntity<Void> createProduct(
+            @RequestPart(value = "product") @Valid ProductReq productReq,
+            @RequestPart(value = "image") @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
     ) {
-        Supplier savedSupplier = supplierService.createSupplier(supplierReq, image);
+        Product savedProduct = productService.createProduct(productReq, image);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(savedSupplier.getId())
+                .buildAndExpand(savedProduct.getId())
                 .toUri();
 
         return ResponseEntity.created(location).build();
@@ -74,21 +81,21 @@ public class SupplierController {
 
     @PreAuthorize("@authorizationService.isAdmin()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> updateSupplierBySlug(
-            @RequestPart("supplier") @Valid SupplierReq supplierReq,
-            @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug,
-            @RequestPart(value = "image", required = true) @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
+    ResponseEntity<Void> updateProductBySlug(
+            @RequestPart(value = "product") @Valid ProductReq productReq,
+            @RequestPart(value = "image") @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image,
+            @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
-        supplierService.updateSupplierBySlug(supplierReq, slug, image);
+        productService.updateProductBySlug(productReq, image, slug);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("@authorizationService.isAdmin()")
     @DeleteMapping("/{slug}")
-    ResponseEntity<Void> deleteSupplierBySlug(
+    ResponseEntity<Void> deleteProductBySlug(
             @PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
-        supplierService.deleteSupplierBySlug(slug);
+        productService.deleteProductBySlug(slug);
         return ResponseEntity.ok().build();
     }
 }

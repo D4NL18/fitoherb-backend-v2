@@ -18,6 +18,9 @@ public class FileStorageService {
     @Value("${path.categoryImages}")
     private String categoryPath;
 
+    @Value("${path.productImages}")
+    private String productPath;
+
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
     public String storeSupplierImage(MultipartFile file) {
@@ -72,6 +75,38 @@ public class FileStorageService {
 
         try {
             Path filePath = Paths.get(categoryPath).resolve(fileName);
+            boolean deleted = Files.deleteIfExists(filePath);
+
+            if (deleted) {
+                log.info("File deleted successfully: {}", fileName);
+            } else {
+                log.warn("Tried to delete inexisting file: {}", fileName);
+            }
+        } catch (IOException e) {
+            log.error("Error deleting file: {} - Error: {}", fileName, e.getMessage());
+        }
+    }
+
+    public String storeProductImage(MultipartFile file) {
+        try {
+            Path directory = Paths.get(productPath);
+            if (!Files.exists(directory)) Files.createDirectories(directory);
+
+            String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
+            Path targetLocation = directory.resolve(fileName);
+
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            return fileName;
+        } catch (IOException e) {
+            throw new RuntimeException("Could not store file. Error: " + e.getMessage());
+        }
+    }
+
+    public void deleteProductImage(String fileName) {
+        if (fileName == null || fileName.isEmpty()) return;
+
+        try {
+            Path filePath = Paths.get(productPath).resolve(fileName);
             boolean deleted = Files.deleteIfExists(filePath);
 
             if (deleted) {

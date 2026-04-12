@@ -61,7 +61,14 @@ public class SupplierService {
         if(this.supplierRepository.findByName(supplierReq.getName()).isPresent()) {
             throw new ResourceAlreadyExistsException("Supplier with that name already exists");
         }
+
         String generatedSlug = StringUtils.toSlug(supplierReq.getName());
+
+        if(this.supplierRepository.findBySlug(generatedSlug).isPresent()) {
+            throw new ResourceAlreadyExistsException(
+                    "A supplier  with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+            );
+        }
 
         String fileName = null;
         if (image != null && !image.isEmpty()) {

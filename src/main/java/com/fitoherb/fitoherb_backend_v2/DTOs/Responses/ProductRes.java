@@ -5,21 +5,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class SupplierRes {
+public class ProductRes {
+
 
     private String name;
 
-    private String slug;
-
-    private LocalDateTime createdAt;
-
     private String imageUrl;
 
-    private Boolean isHighlighted;
+    private String description;
+
+    private ProductCategoryRes category;
+
+    private SupplierRes supplier;
 }
