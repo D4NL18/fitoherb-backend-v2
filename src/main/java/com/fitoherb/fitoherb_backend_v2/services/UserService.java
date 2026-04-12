@@ -1,16 +1,15 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.PasswordUpdateReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.UserReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.UserRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.PasswordUpdateReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.UserReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.UserRes;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
 import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceNotFoundException;
-import com.fitoherb.fitoherb_backend_v2.mappers.AuthMapper;
 import com.fitoherb.fitoherb_backend_v2.mappers.UserMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,17 +17,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@RequiredArgsConstructor
 @Service
 public class UserService {
 
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    UserMapper userMapper;
+    private final UserMapper userMapper;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final  PasswordEncoder passwordEncoder;
 
     public UserRes getUserByEmail(String email) {
         User user = this.userRepository.findByEmail(email)

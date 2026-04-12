@@ -1,7 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.SupplierReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.SupplierRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.SupplierReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.SupplierRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Supplier;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestValidationErrorMessage;
@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,12 +34,13 @@ import java.util.List;
 import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("suppliers")
 @Tag(name = "Suppliers", description = "Management of product manufacturers and vendors. " +
         "Handles the lifecycle of business partners, including branding assets and SEO-optimized identification.")
 public class SupplierController {
-    @Autowired
-    SupplierService supplierService;
+
+    private final SupplierService supplierService;
 
     @Operation(summary = "List all suppliers", description = "Retrieves a non-paginated list of all suppliers. Recommended for populating dropdowns and selection menus.")
     @ApiResponses(value = {

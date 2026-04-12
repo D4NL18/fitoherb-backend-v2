@@ -1,4 +1,4 @@
-package com.fitoherb.fitoherb_backend_v2.DTOs.Responses;
+package com.fitoherb.fitoherb_backend_v2.dtos.responses;
 
 import com.fitoherb.fitoherb_backend_v2.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;

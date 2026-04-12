@@ -1,7 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.ProductReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.ProductRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Product;
 import com.fitoherb.fitoherb_backend_v2.entities.ProductCategory;
 import com.fitoherb.fitoherb_backend_v2.entities.Supplier;
@@ -14,7 +14,7 @@ import com.fitoherb.fitoherb_backend_v2.repositories.ProductRepository;
 import com.fitoherb.fitoherb_backend_v2.repositories.SupplierRepository;
 import com.fitoherb.fitoherb_backend_v2.utils.StringUtils;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,22 +23,18 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+@RequiredArgsConstructor
 @Service
 public class ProductService {
 
-    @Autowired
-    ProductMapper productMapper;
+    private final ProductMapper productMapper;
 
-    @Autowired
-    ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
-    @Autowired
-    SupplierRepository supplierRepository;
+    private final SupplierRepository supplierRepository;
 
-    @Autowired
-    ProductCategoryRepository categoryRepository;
+    private final ProductCategoryRepository categoryRepository;
 
-    @Autowired
     private FileStorageService fileStorageService;
 
     public Page<ProductRes> getAllProductsPaginated(String search, int page, String sortField, String direction) {

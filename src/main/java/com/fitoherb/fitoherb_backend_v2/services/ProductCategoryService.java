@@ -1,9 +1,8 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.ProductCategoryReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.ProductCategoryRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductCategoryReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductCategoryRes;
 import com.fitoherb.fitoherb_backend_v2.entities.ProductCategory;
-import com.fitoherb.fitoherb_backend_v2.entities.User;
 import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceNotFoundException;
@@ -11,7 +10,7 @@ import com.fitoherb.fitoherb_backend_v2.mappers.ProductCategoryMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.ProductCategoryRepository;
 import com.fitoherb.fitoherb_backend_v2.utils.StringUtils;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +20,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ProductCategoryService {
 
-    @Autowired
-    ProductCategoryRepository categoryRepository;
+    private final ProductCategoryRepository categoryRepository;
 
-    @Autowired
-    ProductCategoryMapper categoryMapper;
+    private final ProductCategoryMapper categoryMapper;
 
-    @Autowired
     private FileStorageService fileStorageService;
 
     public ProductCategoryRes getProductCategoryBySlug(String slug) {

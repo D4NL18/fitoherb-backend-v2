@@ -1,10 +1,8 @@
 package com.fitoherb.fitoherb_backend_v2.mappers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.RegisterReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.RegisterReq;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)

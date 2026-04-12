@@ -1,12 +1,11 @@
 package com.fitoherb.fitoherb_backend_v2.mappers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.UserReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.UserRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.UserReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.UserRes;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

@@ -1,7 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.ProductReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.ProductRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Product;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestValidationErrorMessage;
@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,14 +32,14 @@ import java.net.URI;
 import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("products")
 @Tag(name = "Products", description = "Comprehensive management of the product catalog. " +
         "Handles the complete product lifecycle, including administrative CRUD operations, image assets, " +
         "and a public-facing gallery with advanced filtering.")
 public class ProductController {
 
-    @Autowired
-    ProductService productService;
+    private final ProductService productService;
 
     @Operation(summary = "Get product details by slug", description = "Retrieves full details of a specific product using its unique slug. Restricted to administrators.")
     @ApiResponses(value = {

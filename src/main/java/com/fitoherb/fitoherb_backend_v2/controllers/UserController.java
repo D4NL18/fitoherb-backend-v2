@@ -1,8 +1,8 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.PasswordUpdateReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.UserReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.UserRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.PasswordUpdateReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.UserReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.UserRes;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestValidationErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.services.UserService;
@@ -15,25 +15,23 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.*;
-
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("users")
 @Tag(name = "Users", description = "Management of system users and accounts. " +
         "Handles the identity lifecycle, including profile administration, " +
         "security-sensitive password updates, and paginated directory services.")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @Operation(summary = "Get user by email", description = "Retrieves detailed profile information for a specific user using their email address. Requires an active authenticated session.")
     @ApiResponses(value = {

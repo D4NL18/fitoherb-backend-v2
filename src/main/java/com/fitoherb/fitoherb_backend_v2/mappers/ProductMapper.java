@@ -1,7 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.mappers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.ProductReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.ProductRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

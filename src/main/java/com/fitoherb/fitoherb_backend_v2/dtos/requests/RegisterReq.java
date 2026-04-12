@@ -1,4 +1,4 @@
-package com.fitoherb.fitoherb_backend_v2.DTOs.Requests;
+package com.fitoherb.fitoherb_backend_v2.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fitoherb.fitoherb_backend_v2.enums.UserRole;

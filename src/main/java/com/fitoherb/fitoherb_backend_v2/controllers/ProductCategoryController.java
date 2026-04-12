@@ -1,7 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.ProductCategoryReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.ProductCategoryRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductCategoryReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductCategoryRes;
 import com.fitoherb.fitoherb_backend_v2.entities.ProductCategory;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestValidationErrorMessage;
@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +33,13 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("product_categories")
 @Tag(name = "Product Categories", description = "Management of product classifications. " +
         "Provides operations to organize the catalog into logical groups, including image assets and SEO-friendly slug management.")
 public class ProductCategoryController {
 
-    @Autowired
-    ProductCategoryService productCategoryService;
+    private final ProductCategoryService productCategoryService;
 
     @Operation(summary = "List all categories", description = "Retrieves a complete list of all product categories without pagination. Ideal for small dropdowns or menus.")
     @ApiResponses(value = {

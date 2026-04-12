@@ -1,8 +1,8 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.LoginReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.RegisterReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.LoginRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.LoginReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.RegisterReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.LoginRes;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestValidationErrorMessage;
@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,13 +27,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("auth")
 @Tag(name = "Auth", description = "Endpoints for Identity and Access Management (IAM). " +
         "Handles user registration and secure authentication via JWT (JSON Web Tokens).")
 public class AuthController {
 
-    @Autowired
-    AuthorizationService authService;
+    private final AuthorizationService authService;
 
     @Operation(
             summary = "Authenticate user",

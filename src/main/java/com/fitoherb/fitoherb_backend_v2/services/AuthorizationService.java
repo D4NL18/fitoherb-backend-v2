@@ -1,13 +1,13 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.LoginReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.RegisterReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.LoginReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.RegisterReq;
 import com.fitoherb.fitoherb_backend_v2.entities.User;
 import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
 import com.fitoherb.fitoherb_backend_v2.mappers.AuthMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,24 +20,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@RequiredArgsConstructor
 @Service
 public class AuthorizationService implements UserDetailsService {
 
-    @Autowired
     private UserRepository userRepository;
 
-    @Autowired
     @Lazy
     private AuthenticationManager authManager;
 
     @Lazy
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
     private AuthMapper authMapper;
 
-    @Autowired
     private TokenService tokenService;
 
     public boolean isAuthenticated() {

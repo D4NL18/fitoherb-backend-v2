@@ -1,7 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
-import com.fitoherb.fitoherb_backend_v2.DTOs.Requests.SupplierReq;
-import com.fitoherb.fitoherb_backend_v2.DTOs.Responses.SupplierRes;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.SupplierReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.SupplierRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Supplier;
 import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
@@ -10,7 +10,7 @@ import com.fitoherb.fitoherb_backend_v2.mappers.SupplierMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.SupplierRepository;
 import com.fitoherb.fitoherb_backend_v2.utils.StringUtils;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,16 +20,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class SupplierService {
 
-    @Autowired
-    SupplierRepository supplierRepository;
+    private final SupplierRepository supplierRepository;
 
-    @Autowired
-    SupplierMapper supplierMapper;
+    private final SupplierMapper supplierMapper;
 
-    @Autowired
     private FileStorageService fileStorageService;
 
     public List<SupplierRes> getAllSuppliers() {
