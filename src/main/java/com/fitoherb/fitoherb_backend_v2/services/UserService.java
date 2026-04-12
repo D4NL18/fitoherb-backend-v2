@@ -28,9 +28,6 @@ public class UserService {
     UserMapper userMapper;
 
     @Autowired
-    AuthMapper authMapper;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     public UserRes getUserByEmail(String email) {
