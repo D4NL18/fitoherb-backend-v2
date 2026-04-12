@@ -1,6 +1,9 @@
 package com.fitoherb.fitoherb_backend_v2.infra.exceptions;
 
 import com.fitoherb.fitoherb_backend_v2.exceptions.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -11,10 +14,12 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class RestExceptionHandler {
 
@@ -99,7 +104,7 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
-    @ExceptionHandler(org.springframework.dao.InvalidDataAccessApiUsageException.class)
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
     public ResponseEntity<RestErrorMessage> handleInvalidDataAccess(org.springframework.dao.InvalidDataAccessApiUsageException ex) {
         String message = "Invalid request: check if the sort field or query parameters are correct.";
         String rawMessage = ex.getMessage();
@@ -115,7 +120,7 @@ public class RestExceptionHandler {
                 .body(new RestErrorMessage(HttpStatus.BAD_REQUEST, message));
     }
 
-    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<RestErrorMessage> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
         Class<?> requiredType = ex.getRequiredType();
         String typeName = (requiredType != null) ? requiredType.getSimpleName() : "unknown type";
@@ -124,7 +129,7 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
-    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<RestErrorMessage> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
         String message = "Data integrity violation. Resource already being used.";
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, message);
@@ -133,8 +138,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RestErrorMessage> handleGenericException(Exception ex) {
-        ex.printStackTrace();
-
+        log.error("Unhandled exception caught: ", ex);
         RestErrorMessage errorResponse = new RestErrorMessage(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred. Please contact the administrator."
