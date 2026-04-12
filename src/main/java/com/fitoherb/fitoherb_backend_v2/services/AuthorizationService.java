@@ -79,7 +79,7 @@ public class AuthorizationService implements UserDetailsService {
             return userRepository.save(newUser);
 
         }catch (Exception e) {
-            throw new DatabaseOperationException("Failed to delete user. Ensure there are no records linked to this account.");
+            throw new DatabaseOperationException("Failed to delete user. Ensure there are no records linked to this account.", e);
         }
     }
 }

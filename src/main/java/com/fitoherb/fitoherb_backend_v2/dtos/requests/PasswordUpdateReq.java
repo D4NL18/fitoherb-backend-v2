@@ -20,7 +20,7 @@ public class PasswordUpdateReq {
     )
     @NotBlank(message = MSG_REQUIRED_FIELD)
     @Size(min = MIN_PASSWORD_LENGTH, max = MAX_STRING_LENGTH, message = MSG_PASSWORD_SIZE)
-    @Pattern(regexp = PASSWORD_REGEX, message = MSG_PASSWORD_INVALID)
+    @Pattern(regexp = PASSWORD_VALIDATION_REGEX, message = MSG_PASSWORD_INVALID)
     private String password;
 
 }

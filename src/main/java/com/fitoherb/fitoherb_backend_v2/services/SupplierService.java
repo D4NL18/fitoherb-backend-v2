@@ -28,7 +28,9 @@ public class SupplierService {
 
     private final SupplierMapper supplierMapper;
 
-    private FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
+
+    private static final String SUPPLIER_NOT_FOUND_MSG = "Supplier not found with slug: ";
 
     public List<SupplierRes> getAllSuppliers() {
         List<Supplier> supplierList = this.supplierRepository.findAll();
@@ -38,9 +40,8 @@ public class SupplierService {
 
     public SupplierRes getSupplierBySlug(String slug) {
         Supplier supplier = this.supplierRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with slug: " + slug));
-        SupplierRes supplierRes = supplierMapper.entityToRes(supplier);
-        return supplierRes;
+                .orElseThrow(() -> new ResourceNotFoundException(SUPPLIER_NOT_FOUND_MSG + slug));
+        return supplierMapper.entityToRes(supplier);
     }
 
     public Page<SupplierRes>  getAllSuppliersPaginated(String search, int page, String sortField, String direction) {
@@ -83,16 +84,14 @@ public class SupplierService {
     @Transactional
     public void updateSupplierBySlug(SupplierReq supplierReq, String slug,MultipartFile image) {
         Supplier supplier = this.supplierRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(SUPPLIER_NOT_FOUND_MSG + slug));
 
         String generatedSlug = StringUtils.toSlug(supplierReq.getName());
 
-        if (!supplier.getSlug().equals(generatedSlug)) {
-            if (this.supplierRepository.findBySlug(generatedSlug).isPresent()) {
-                throw new ResourceAlreadyExistsException(
-                        "A supplier with a similar name already exists (Slug conflict: " + generatedSlug + ")"
-                );
-            }
+        if (!supplier.getSlug().equals(generatedSlug) && this.supplierRepository.findBySlug(generatedSlug).isPresent()) {
+            throw new ResourceAlreadyExistsException(
+                    "A supplier with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+            );
         }
 
         if (image != null && !image.isEmpty()) {
@@ -107,19 +106,19 @@ public class SupplierService {
 
             supplierRepository.save(supplier);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update supplier in database.");
+            throw new DatabaseOperationException("Failed to update supplier in database.", e);
         }
     }
 
     @Transactional
     public void deleteSupplierBySlug(String slug) {
         Supplier supplier = this.supplierRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(SUPPLIER_NOT_FOUND_MSG + slug));
         try {
             fileStorageService.deleteSupplierImage(supplier.getImagePath());
             this.supplierRepository.delete(supplier);
         }catch(Exception e) {
-            throw new DatabaseOperationException("Failed to delete supplier. Ensure there are no records linked to this account.");
+            throw new DatabaseOperationException("Failed to delete supplier. Ensure there are no records linked to this account.", e);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
+import com.fitoherb.fitoherb_backend_v2.exceptions.FileStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -25,7 +26,7 @@ public class FileStorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
     private String storeFile(MultipartFile file, String baseDirPath) {
-        if (file.isEmpty()) throw new RuntimeException("Failed to store empty file.");
+        if (file.isEmpty()) throw new FileStorageException("Failed to store empty file.");
 
         try {
             Path directory = Paths.get(baseDirPath).toAbsolutePath().normalize();
@@ -48,7 +49,7 @@ public class FileStorageService {
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             return fileName;
         } catch (IOException e) {
-            throw new RuntimeException("Could not store file. Error: " + e.getMessage());
+            throw new FileStorageException("Could not store file. Error: " + e.getMessage());
         }
     }
 

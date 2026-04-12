@@ -35,7 +35,9 @@ public class ProductService {
 
     private final ProductCategoryRepository categoryRepository;
 
-    private FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
+
+    private static final String PRODUCT_NOT_FOUND_MSG = "Product not found with slug: ";
 
     public Page<ProductRes> getAllProductsPaginated(String search, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -84,9 +86,8 @@ public class ProductService {
 
     public ProductRes getProductBySlug(String slug) {
         Product product = this.productRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
-        ProductRes productRes = productMapper.entityToRes(product);
-        return productRes;
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND_MSG + slug));
+        return productMapper.entityToRes(product);
     }
 
     @Transactional
@@ -125,16 +126,14 @@ public class ProductService {
     @Transactional
     public void updateProductBySlug(ProductReq productReq, MultipartFile image, String slug) {
         Product product = this.productRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND_MSG + slug));
 
         String generatedSlug = StringUtils.toSlug(productReq.getName());
 
-        if (!product.getSlug().equals(generatedSlug)) {
-            if (this.productRepository.findBySlug(generatedSlug).isPresent()) {
-                throw new ResourceAlreadyExistsException(
-                        "A product with a similar name already exists (Slug conflict: " + generatedSlug + ")"
-                );
-            }
+        if (!product.getSlug().equals(generatedSlug) && this.productRepository.findBySlug(generatedSlug).isPresent()) {
+            throw new ResourceAlreadyExistsException(
+                    "A product with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+            );
         }
 
         if (image != null && !image.isEmpty()) {
@@ -149,19 +148,19 @@ public class ProductService {
 
             productRepository.save(product);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update product in database.");
+            throw new DatabaseOperationException("Failed to update product in database.", e);
         }
     }
 
     @Transactional
     public void deleteProductBySlug(String slug) {
         Product product = this.productRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND_MSG + slug));
         try {
             fileStorageService.deleteProductImage(product.getImagePath());
             this.productRepository.delete(product);
         }catch(Exception e) {
-            throw new DatabaseOperationException("Failed to delete product. Ensure there are no records linked to this account.");
+            throw new DatabaseOperationException("Failed to delete product. Ensure there are no records linked to this account.", e);
         }
     }
 

@@ -33,7 +33,7 @@ public class RegisterReq {
     )
     @Size(min = MIN_PASSWORD_LENGTH, max = MAX_STRING_LENGTH, message = MSG_PASSWORD_SIZE)
     @Pattern(
-            regexp = PASSWORD_REGEX,
+            regexp = PASSWORD_VALIDATION_REGEX,
             message = MSG_PASSWORD_INVALID
     )
     @NotBlank(message = MSG_REQUIRED_FIELD)

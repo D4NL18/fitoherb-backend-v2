@@ -23,9 +23,9 @@ public class RestExceptionHandler {
 
         Map<String, String> fieldErrors = new HashMap<>();
 
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            fieldErrors.put(error.getField(), error.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                fieldErrors.put(error.getField(), error.getDefaultMessage())
+        );
 
         RestValidationErrorMessage response = new RestValidationErrorMessage(
                 HttpStatus.BAD_REQUEST,
@@ -102,21 +102,24 @@ public class RestExceptionHandler {
     @ExceptionHandler(org.springframework.dao.InvalidDataAccessApiUsageException.class)
     public ResponseEntity<RestErrorMessage> handleInvalidDataAccess(org.springframework.dao.InvalidDataAccessApiUsageException ex) {
         String message = "Invalid request: check if the sort field or query parameters are correct.";
+        String rawMessage = ex.getMessage();
 
-        if (ex.getMessage() != null && ex.getMessage().contains("Could not resolve attribute")) {
-            try {
-                String field = ex.getMessage().split("'")[1];
-                message = "Invalid sort field: " + field;
-            } catch (Exception ignored) {}
+        if (rawMessage != null && rawMessage.contains("Could not resolve attribute")) {
+            var matcher = java.util.regex.Pattern.compile("'([^']*)'").matcher(rawMessage);
+            if (matcher.find()) {
+                message = "Invalid sort field: " + matcher.group(1);
+            }
         }
 
-        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.BAD_REQUEST, message);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new RestErrorMessage(HttpStatus.BAD_REQUEST, message));
     }
 
     @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
     public ResponseEntity<RestErrorMessage> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
-        String message = String.format("The parameter '%s' should be of type '%s'", ex.getName(), ex.getRequiredType().getSimpleName());
+        Class<?> requiredType = ex.getRequiredType();
+        String typeName = (requiredType != null) ? requiredType.getSimpleName() : "unknown type";
+        String message = String.format("The parameter '%s' should be of type '%s'", ex.getName(), typeName);
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.BAD_REQUEST, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }

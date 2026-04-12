@@ -27,11 +27,12 @@ public class UserService {
 
     private final  PasswordEncoder passwordEncoder;
 
+    private static final String USER_NOT_FOUND_MSG = "User not found with email: ";
+
     public UserRes getUserByEmail(String email) {
         User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-        UserRes userRes = userMapper.entityToRes(user);
-        return userRes;
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG + email));
+        return userMapper.entityToRes(user);
     }
 
     public Page<UserRes> getAllUsers(String search, int page, String sortField, String direction) {
@@ -49,19 +50,19 @@ public class UserService {
     @Transactional
     public void updateUserByEmail(String email, UserReq userReq) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG + email));
 
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update user in database.");
+            throw new DatabaseOperationException("Failed to update user in database.", e);
         }
     }
 
     @Transactional
     public void updatePasswordByEmail(String email, PasswordUpdateReq passwordUpdateReq) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG + email));
 
         String encryptedPassword = passwordEncoder.encode(passwordUpdateReq.getPassword());
         user.setPassword(encryptedPassword);
@@ -69,19 +70,19 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update password.");
+            throw new DatabaseOperationException("Failed to update password.", e);
         }
     }
 
     @Transactional
     public void deleteUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG + email));
 
         try {
             this.userRepository.delete(user);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to delete user. Ensure there are no records linked to this account.");
+            throw new DatabaseOperationException("Failed to delete user. Ensure there are no records linked to this account.", e);
         }
     }
 }

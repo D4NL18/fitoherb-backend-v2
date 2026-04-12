@@ -28,13 +28,14 @@ public class ProductCategoryService {
 
     private final ProductCategoryMapper categoryMapper;
 
-    private FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
+
+    private static final String NOT_FOUND_MSG = "Category not found with slug: ";
 
     public ProductCategoryRes getProductCategoryBySlug(String slug) {
         ProductCategory category = this.categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with slug: " + slug));
-        ProductCategoryRes categoryRes = categoryMapper.entityToRes(category);
-        return categoryRes;
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + slug));
+        return categoryMapper.entityToRes(category);
     }
 
     public List<ProductCategoryRes> getAllProductCategories() {
@@ -79,23 +80,21 @@ public class ProductCategoryService {
             category.setImagePath(fileName);
             return categoryRepository.save(category);
         }catch (Exception e) {
-            throw new DatabaseOperationException("Failed to create category.");
+            throw new DatabaseOperationException("Failed to create category.", e);
         }
     }
 
     @Transactional
     public void updateProductCategoryBySlug(ProductCategoryReq categoryReq, String slug, MultipartFile image) {
         ProductCategory category = this.categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + slug));
 
         String generatedSlug = StringUtils.toSlug(categoryReq.getName());
 
-        if (!category.getSlug().equals(generatedSlug)) {
-            if (this.categoryRepository.findBySlug(generatedSlug).isPresent()) {
-                throw new ResourceAlreadyExistsException(
-                        "A category with a similar name already exists (Slug conflict: " + generatedSlug + ")"
-                );
-            }
+        if (!category.getSlug().equals(generatedSlug) && this.categoryRepository.findBySlug(generatedSlug).isPresent()) {
+            throw new ResourceAlreadyExistsException(
+                    "A category with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+            );
         }
         if (image != null && !image.isEmpty()) {
             fileStorageService.deleteCategoryImage(category.getImagePath());
@@ -108,19 +107,19 @@ public class ProductCategoryService {
 
             categoryRepository.save(category);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update category in database.");
+            throw new DatabaseOperationException("Failed to update category in database.", e);
         }
     }
 
     @Transactional
     public void deleteProductCategoryBySlug(String slug) {
         ProductCategory category = this.categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + slug));
         try {
             fileStorageService.deleteCategoryImage(category.getImagePath());
             this.categoryRepository.delete(category);
         }catch(Exception e) {
-            throw new DatabaseOperationException("Failed to delete category. Ensure there are no records linked to this account.");
+            throw new DatabaseOperationException("Failed to delete category. Ensure there are no records linked to this account.", e);
         }
     }
 }

@@ -4,6 +4,11 @@ import java.text.Normalizer;
 import java.util.regex.Pattern;
 
 public class StringUtils {
+
+    private StringUtils() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static String toSlug(String input) {
         if (input == null) return null;
 
