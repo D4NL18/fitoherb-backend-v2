@@ -168,7 +168,7 @@ public class ProductController {
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> updateProductBySlug(
             @RequestPart(value = "product") @Valid ProductReq productReq,
-            @RequestPart(value = "image") @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image,
+            @RequestPart(value = "image") MultipartFile image,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         productService.updateProductBySlug(productReq, image, slug);

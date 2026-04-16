@@ -119,7 +119,7 @@ public class SupplierController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> createSupplier(
             @RequestPart("supplier") @Valid SupplierReq supplierReq,
-            @RequestPart(value = "image", required = true) MultipartFile image
+            @RequestPart(value = "image", required = true) @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
     ) {
         Supplier savedSupplier = supplierService.createSupplier(supplierReq, image);
 
@@ -150,7 +150,7 @@ public class SupplierController {
     ResponseEntity<Void> updateSupplierBySlug(
             @RequestPart("supplier") @Valid SupplierReq supplierReq,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug,
-            @RequestPart(value = "image", required = true) @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
+            @RequestPart(value = "image", required = true) MultipartFile image
     ) {
         supplierService.updateSupplierBySlug(supplierReq, slug, image);
         return ResponseEntity.ok().build();
