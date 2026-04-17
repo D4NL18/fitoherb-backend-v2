@@ -27,18 +27,6 @@ public class RegisterReq {
     @NotBlank(message = MSG_REQUIRED_FIELD)
     private String name;
 
-    @Schema(
-            description = "Secure password following security policy (uppercase, lowercase, numbers, and special characters)",
-            example = "FitoHerb@2026!"
-    )
-    @Size(min = MIN_PASSWORD_LENGTH, max = MAX_STRING_LENGTH, message = MSG_PASSWORD_SIZE)
-    @Pattern(
-            regexp = PASSWORD_VALIDATION_REGEX,
-            message = MSG_PASSWORD_INVALID
-    )
-    @NotBlank(message = MSG_REQUIRED_FIELD)
-    private String password;
-
     @Schema(description = "User's date of birth in dd-MM-yyyy format", example = "25-10-1995")
     @Past(message = MSG_DATE_PAST)
     @NotNull(message = MSG_REQUIRED_FIELD)
