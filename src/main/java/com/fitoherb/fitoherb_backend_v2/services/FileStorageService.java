@@ -32,11 +32,15 @@ public class FileStorageService {
             Path directory = Paths.get(baseDirPath).toAbsolutePath().normalize();
             if (!Files.exists(directory)) Files.createDirectories(directory);
 
-            String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+            String rawFilename = file.getOriginalFilename();
             String extension = "";
-            int lastIndex = originalFilename.lastIndexOf('.');
-            if (lastIndex >= 0) {
-                extension = originalFilename.substring(lastIndex);
+
+            if (rawFilename != null && !rawFilename.isBlank()) {
+                String originalFilename = StringUtils.cleanPath(rawFilename);
+                int lastIndex = originalFilename.lastIndexOf('.');
+                if (lastIndex >= 0) {
+                    extension = originalFilename.substring(lastIndex);
+                }
             }
 
             String fileName = UUID.randomUUID().toString() + extension;

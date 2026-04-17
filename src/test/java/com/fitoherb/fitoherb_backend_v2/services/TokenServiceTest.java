@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TokenServiceTest {
 
     private TokenService tokenService;
-    private final String SECRET = "minha-chave-secreta-para-testes-fitoherb-123";
+    private static final String SECRET = "minha-chave-secreta-para-testes-fitoherb-123";
     private User user;
 
     @BeforeEach

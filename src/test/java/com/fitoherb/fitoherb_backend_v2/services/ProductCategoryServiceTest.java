@@ -166,7 +166,10 @@ class ProductCategoryServiceTest {
         @Test
         void updateProductCategoryNotFound() {
             when(categoryRepository.findBySlug(anyString())).thenReturn(Optional.empty());
-            assertThrows(ResourceNotFoundException.class, () -> productCategoryService.updateProductCategoryBySlug(new ProductCategoryReq(), "slug", null));
+
+            ProductCategoryReq req = new ProductCategoryReq();
+
+            assertThrows(ResourceNotFoundException.class, () -> productCategoryService.updateProductCategoryBySlug(req, "slug", null));
         }
     }
 

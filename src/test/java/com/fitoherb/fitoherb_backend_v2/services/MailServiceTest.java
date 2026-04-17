@@ -27,7 +27,7 @@ class MailServiceTest {
 
     private MailService mailService;
 
-    private final String SENDER_EMAIL = "suporte@fitoherb.com";
+    private static final String SENDER_EMAIL = "suporte@fitoherb.com";
 
     @BeforeEach
     void setup() {
