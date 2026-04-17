@@ -2,6 +2,7 @@ package com.fitoherb.fitoherb_backend_v2.dtos.requests;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +10,7 @@ import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConst
 
 @Getter
 @Setter
+@AllArgsConstructor
 @Schema(description = "Request object for user authentication")
 public class LoginReq {
 

@@ -66,7 +66,6 @@ public class AuthorizationService implements UserDetailsService {
     public String login(LoginReq loginReq) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(loginReq.getEmail(), loginReq.getPassword());
 
-        // Obtendo o bean apenas no momento do uso
         var auth = this.authManagerProvider.getObject().authenticate(usernamePassword);
 
         return tokenService.generateToken((User) auth.getPrincipal());
