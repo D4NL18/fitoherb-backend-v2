@@ -8,10 +8,8 @@ import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestValidationErrorMess
 import com.fitoherb.fitoherb_backend_v2.services.ProductCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.*;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -118,6 +116,7 @@ public class ProductCategoryController {
     @PreAuthorize("@authorizationService.isAdmin()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> createProductCategory(
+            @RequestBody(content = @Content(encoding = @Encoding(name = "product_category", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart("product_category") @Valid ProductCategoryReq categoryReq,
             @RequestPart(value = "image", required = true)@Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
 
@@ -149,6 +148,7 @@ public class ProductCategoryController {
     @PreAuthorize("@authorizationService.isAdmin()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> updateProductCategoryBySlug(
+            @RequestBody(content = @Content(encoding = @Encoding(name = "product_category", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart("product_category") @Valid ProductCategoryReq categoryReq,
             @RequestPart(value = "image", required = true) MultipartFile image,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug

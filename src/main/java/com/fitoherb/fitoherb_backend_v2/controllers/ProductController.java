@@ -9,8 +9,10 @@ import com.fitoherb.fitoherb_backend_v2.services.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -137,6 +139,7 @@ public class ProductController {
     @PreAuthorize("@authorizationService.isAdmin()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> createProduct(
+            @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart(value = "product") @Valid ProductReq productReq,
             @RequestPart(value = "image") @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
     ) {
@@ -167,6 +170,7 @@ public class ProductController {
     @PreAuthorize("@authorizationService.isAdmin()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Void> updateProductBySlug(
+            @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart(value = "product") @Valid ProductReq productReq,
             @RequestPart(value = "image") MultipartFile image,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
