@@ -22,7 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/products/**")
                 .addResourceLocations("file:" + productPath + "/");
     }
-    
+
 
     @Override
     public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {

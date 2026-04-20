@@ -13,9 +13,6 @@ import lombok.Setter;
 @Schema(description = "Response object representing a product category")
 public class ProductCategoryRes {
 
-    @Schema(description = "Unique identifier of the category", example = "550e8400-e29b-41d4-a716-446655440000")
-    private String id;
-
     @Schema(description = "Display name of the category", example = "Chás e Infusões")
     private String name;
 
