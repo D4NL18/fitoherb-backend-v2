@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductCategoryRepository extends JpaRepository<ProductCategory, String> {
@@ -18,4 +19,10 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
             "LOWER(pc.name) LIKE LOWER(CONCAT('%', :search, '%'))"
     )
     Page<ProductCategory> findAllFiltered(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM products p WHERE p.category.slug = :categorySlug")
+    int countProductsByCategorySlug(@Param("categorySlug") String categorySlug);
+
+    @Query("SELECT p.category.slug, COUNT(p) FROM products p GROUP BY p.category.slug")
+    List<Object[]> countProductsPerCategory();
 }

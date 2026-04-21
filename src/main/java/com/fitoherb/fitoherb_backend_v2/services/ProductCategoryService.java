@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -35,24 +37,48 @@ public class ProductCategoryService {
     public ProductCategoryRes getProductCategoryBySlug(String slug) {
         ProductCategory category = this.categoryRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + slug));
-        return categoryMapper.entityToRes(category);
+
+        ProductCategoryRes res = categoryMapper.entityToRes(category);
+
+        res.setCount(this.categoryRepository.countProductsByCategorySlug(slug));
+
+        return res;
     }
 
     public List<ProductCategoryRes> getAllProductCategories() {
         List<ProductCategory> categoriesList = this.categoryRepository.findAll();
+        List<ProductCategoryRes> resList = categoryMapper.toResList(categoriesList);
 
-        return categoryMapper.toResList(categoriesList);
+        enrichWithProductCount(resList);
+
+        return resList;
     }
 
     public Page<ProductCategoryRes> getAllProductCategoriesPaginated(String search, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
-
         Pageable pageable = PageRequest.of(page, 10, Sort.by(sortDirection, sortField));
 
         String searchTerm = (search == null) ? "" : search;
-        org.springframework.data.domain.Page<ProductCategory> categoryPage = categoryRepository.findAllFiltered(searchTerm, pageable);
+        Page<ProductCategory> categoryPage = categoryRepository.findAllFiltered(searchTerm, pageable);
 
-        return categoryPage.map(categoryMapper::entityToRes);
+        Page<ProductCategoryRes> resPage = categoryPage.map(categoryMapper::entityToRes);
+
+        enrichWithProductCount(resPage.getContent());
+
+        return resPage;
+    }
+
+    private void enrichWithProductCount(List<ProductCategoryRes> dtos) {
+        Map<String, Long> countsMap = categoryRepository.countProductsPerCategory()
+                .stream()
+                .collect(Collectors.toMap(
+                        obj -> (String) obj[0],
+                        obj -> (Long) obj[1]
+                ));
+
+        dtos.forEach(dto -> {
+            dto.setCount(countsMap.getOrDefault(dto.getSlug(), 0L).intValue());
+        });
     }
 
     @Transactional

@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -32,19 +34,27 @@ public class SupplierService {
 
     private static final String SUPPLIER_NOT_FOUND_MSG = "Supplier not found with slug: ";
 
-    public List<SupplierRes> getAllSuppliers() {
-        List<Supplier> supplierList = this.supplierRepository.findAll();
-
-        return supplierMapper.toResList(supplierList);
-    }
-
     public SupplierRes getSupplierBySlug(String slug) {
         Supplier supplier = this.supplierRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(SUPPLIER_NOT_FOUND_MSG + slug));
-        return supplierMapper.entityToRes(supplier);
+
+        SupplierRes res = supplierMapper.entityToRes(supplier);
+
+        res.setCount(this.supplierRepository.countProductsBySupplierSlug(supplier.getSlug()));
+
+        return res;
     }
 
-    public Page<SupplierRes>  getAllSuppliersPaginated(String search, int page, String sortField, String direction) {
+    public List<SupplierRes> getAllSuppliers() {
+        List<Supplier> supplierList = this.supplierRepository.findAll();
+        List<SupplierRes> resList = supplierMapper.toResList(supplierList);
+
+        enrichWithProductCount(resList);
+
+        return resList;
+    }
+
+    public Page<SupplierRes> getAllSuppliersPaginated(String search, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
 
         Pageable pageable = PageRequest.of(page, 10, Sort.by(sortDirection, sortField));
@@ -52,7 +62,24 @@ public class SupplierService {
         String searchTerm = (search == null) ? "" : search;
         org.springframework.data.domain.Page<Supplier> supplierPage = supplierRepository.findAllFiltered(searchTerm, pageable);
 
-        return supplierPage.map(supplierMapper::entityToRes);
+        Page<SupplierRes> resPage = supplierPage.map(supplierMapper::entityToRes);
+
+        enrichWithProductCount(resPage.getContent());
+
+        return resPage;
+    }
+
+    private void enrichWithProductCount(List<SupplierRes> dtos) {
+        Map<String, Long> countsMap = supplierRepository.countProductsPerSupplier()
+                .stream()
+                .collect(Collectors.toMap(
+                        obj -> (String) obj[0],
+                        obj -> (Long) obj[1]
+                ));
+
+        dtos.forEach(dto -> {
+            dto.setCount(countsMap.getOrDefault(dto.getSlug(), 0L).intValue());
+        });
     }
 
     @Transactional

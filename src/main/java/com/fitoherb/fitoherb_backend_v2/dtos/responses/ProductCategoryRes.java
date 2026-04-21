@@ -24,4 +24,7 @@ public class ProductCategoryRes {
 
     @Schema(description = "Full URL to the category's illustrative image", example = "https://api.fitoherb.com/storage/categories/chas.png")
     private String imageUrl;
+
+    @Schema(description = "count of how many products there are registred in the database with that category")
+    private int count;
 }

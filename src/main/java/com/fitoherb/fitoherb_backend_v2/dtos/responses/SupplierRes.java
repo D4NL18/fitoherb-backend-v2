@@ -27,4 +27,8 @@ public class SupplierRes {
 
     @Schema(description = "Indicates if the supplier is currently featured in the storefront", example = "true")
     private Boolean isHighlighted;
+
+    @Schema(description = "count of how many products there are registred in the database with that supplier")
+    private int count;
+
 }

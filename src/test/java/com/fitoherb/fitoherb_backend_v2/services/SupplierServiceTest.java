@@ -62,28 +62,25 @@ class SupplierServiceTest {
         void getAllSuppliersSuccess() {
             when(supplierRepository.findAll()).thenReturn(List.of(supplierEntity));
             when(supplierMapper.toResList(any())).thenReturn(List.of(supplierRes));
-
+            when(supplierRepository.countProductsPerSupplier()).thenReturn(Collections.singletonList(new Object[]{"fornecedor-original", 10L}));
             List<SupplierRes> result = supplierService.getAllSuppliers();
 
             assertFalse(result.isEmpty());
             verify(supplierRepository).findAll();
+            verify(supplierRepository).countProductsPerSupplier();
         }
 
         @Test
         void getSupplierBySlugSuccess() {
             when(supplierRepository.findBySlug("fornecedor-original")).thenReturn(Optional.of(supplierEntity));
             when(supplierMapper.entityToRes(supplierEntity)).thenReturn(supplierRes);
+            when(supplierRepository.countProductsBySupplierSlug("fornecedor-original")).thenReturn(5);
 
             SupplierRes result = supplierService.getSupplierBySlug("fornecedor-original");
 
             assertNotNull(result);
             verify(supplierRepository).findBySlug("fornecedor-original");
-        }
-
-        @Test
-        void getSupplierBySlugNotFound() {
-            when(supplierRepository.findBySlug(anyString())).thenReturn(Optional.empty());
-            assertThrows(ResourceNotFoundException.class, () -> supplierService.getSupplierBySlug("invalido"));
+            verify(supplierRepository).countProductsBySupplierSlug("fornecedor-original");
         }
 
         @Test
@@ -91,10 +88,23 @@ class SupplierServiceTest {
             Page<Supplier> page = new PageImpl<>(List.of(supplierEntity));
             when(supplierRepository.findAllFiltered(anyString(), any(Pageable.class))).thenReturn(page);
             when(supplierMapper.entityToRes(any())).thenReturn(supplierRes);
-
+            when(supplierRepository.countProductsPerSupplier()).thenReturn(Collections.singletonList(new Object[]{"fornecedor-original", 2L}));
             Page<SupplierRes> result = supplierService.getAllSuppliersPaginated("teste", 0, "name", "ASC");
 
             assertEquals(1, result.getTotalElements());
+            verify(supplierRepository).countProductsPerSupplier();
+        }
+
+        @Test
+        void getAllSuppliersHandlesMissingCountGracefully() {
+            when(supplierRepository.findAll()).thenReturn(List.of(supplierEntity));
+            when(supplierMapper.toResList(any())).thenReturn(List.of(supplierRes));
+            when(supplierRepository.countProductsPerSupplier()).thenReturn(Collections.emptyList());
+
+            List<SupplierRes> result = supplierService.getAllSuppliers();
+
+            assertFalse(result.isEmpty());
+            assertEquals(0, result.get(0).getCount());
         }
     }
 

@@ -8,19 +8,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${path.supplierImages}")
-    private String supplierPath;
-
-    @Value("${path.productImages}")
-    private String productPath;
+    @Value("${path.baseImages}")
+    private String baseImagesPath;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/suppliers/**")
-                .addResourceLocations("file:" + supplierPath + "/");
-
-        registry.addResourceHandler("/uploads/products/**")
-                .addResourceLocations("file:" + productPath + "/");
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:///" + baseImagesPath);
     }
 
 

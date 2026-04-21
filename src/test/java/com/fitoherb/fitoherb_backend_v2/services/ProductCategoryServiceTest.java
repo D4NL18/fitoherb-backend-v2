@@ -48,15 +48,19 @@ class ProductCategoryServiceTest {
         void getProductCategoryBySlugSuccess() {
             String slug = "cha-verde";
             ProductCategory entity = new ProductCategory();
+            entity.setSlug(slug);
             ProductCategoryRes res = new ProductCategoryRes();
+            res.setSlug(slug);
 
             when(categoryRepository.findBySlug(slug)).thenReturn(Optional.of(entity));
             when(categoryMapper.entityToRes(entity)).thenReturn(res);
-
+            when(categoryRepository.countProductsByCategorySlug(anyString())).thenReturn(5);
             ProductCategoryRes result = productCategoryService.getProductCategoryBySlug(slug);
 
             assertNotNull(result);
+            assertEquals(5, result.getCount());
             verify(categoryRepository).findBySlug(slug);
+            verify(categoryRepository).countProductsByCategorySlug(slug);
         }
 
         @Test
@@ -72,24 +76,54 @@ class ProductCategoryServiceTest {
 
         @Test
         void getAllProductCategoriesSuccess() {
+            ProductCategoryRes res = new ProductCategoryRes();
+            res.setSlug("cha-verde");
+
             when(categoryRepository.findAll()).thenReturn(List.of(new ProductCategory()));
-            when(categoryMapper.toResList(any())).thenReturn(List.of(new ProductCategoryRes()));
+            when(categoryMapper.toResList(any())).thenReturn(List.of(res));
+            // NOVA LINHA: Mock da contagem em lote
+            when(categoryRepository.countProductsPerCategory())
+                    .thenReturn(Collections.singletonList(new Object[]{"cha-verde", 10L}));
 
             List<ProductCategoryRes> result = productCategoryService.getAllProductCategories();
 
             assertEquals(1, result.size());
+            assertEquals(10, result.get(0).getCount()); // Verificando a injeção
+            verify(categoryRepository).countProductsPerCategory(); // Verificando chamada
         }
 
         @Test
         void getAllProductCategoriesPaginatedSuccess() {
             Page<ProductCategory> page = new PageImpl<>(List.of(new ProductCategory()));
+            ProductCategoryRes res = new ProductCategoryRes();
+            res.setSlug("cha-verde");
+
             when(categoryRepository.findAllFiltered(anyString(), any(Pageable.class))).thenReturn(page);
-            when(categoryMapper.entityToRes(any())).thenReturn(new ProductCategoryRes());
+            when(categoryMapper.entityToRes(any())).thenReturn(res);
+            when(categoryRepository.countProductsPerCategory())
+                    .thenReturn(Collections.singletonList(new Object[]{"cha-verde", 5L}));
 
             Page<ProductCategoryRes> result = productCategoryService.getAllProductCategoriesPaginated("test", 0, "name", "ASC");
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
+            assertEquals(5, result.getContent().get(0).getCount());
+            verify(categoryRepository).countProductsPerCategory();
+        }
+
+        @Test
+        void getAllProductCategoriesHandlesMissingCountGracefully() {
+            ProductCategoryRes res = new ProductCategoryRes();
+            res.setSlug("sem-produtos");
+
+            when(categoryRepository.findAll()).thenReturn(List.of(new ProductCategory()));
+            when(categoryMapper.toResList(any())).thenReturn(List.of(res));
+            when(categoryRepository.countProductsPerCategory()).thenReturn(Collections.emptyList());
+
+            List<ProductCategoryRes> result = productCategoryService.getAllProductCategories();
+
+            assertFalse(result.isEmpty());
+            assertEquals(0, result.get(0).getCount());
         }
     }
 

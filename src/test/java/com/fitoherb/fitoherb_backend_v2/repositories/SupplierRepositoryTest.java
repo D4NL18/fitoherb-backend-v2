@@ -1,5 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.repositories;
 
+import com.fitoherb.fitoherb_backend_v2.entities.Product;
+import com.fitoherb.fitoherb_backend_v2.entities.ProductCategory;
 import com.fitoherb.fitoherb_backend_v2.entities.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +12,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.AuditorAware;
@@ -31,6 +34,9 @@ class SupplierRepositoryTest {
 
     @Autowired
     private SupplierRepository supplierRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @TestConfiguration
     public static class AuditorConfig {
@@ -93,6 +99,87 @@ class SupplierRepositoryTest {
             Page<Supplier> result = supplierRepository.findAllFiltered(search, pageable);
 
             assertEquals(expectedCount, result.getTotalElements());
+        }
+    }
+
+    @Nested
+    @DisplayName("Consultas de Agrupamento e Contagem")
+    class CountQueriesTests {
+        @Test
+        void countProductsBySupplierSlugSuccess() {
+            Supplier supplier = supplierRepository.findBySlug("fornecedor-de-ervas").orElseThrow();
+
+            ProductCategory cat = new ProductCategory();
+            cat.setName("Categoria Teste");
+            cat.setSlug("categoria-teste");
+            entityManager.persist(cat);
+
+            Product p1 = new Product();
+            p1.setName("Produto A");
+            p1.setSlug("produto-a");
+            p1.setCategory(cat);
+            p1.setSupplier(supplier);
+            entityManager.persist(p1);
+
+            Product p2 = new Product();
+            p2.setName("Produto B");
+            p2.setSlug("produto-b");
+            p2.setCategory(cat);
+            p2.setSupplier(supplier);
+            entityManager.persist(p2);
+
+            entityManager.flush();
+
+            int count = supplierRepository.countProductsBySupplierSlug("fornecedor-de-ervas");
+
+            assertEquals(2, count);
+        }
+
+        @Test
+        void countProductsPerSupplierSuccess() {
+            Supplier s1 = supplierRepository.findBySlug("fornecedor-de-ervas").orElseThrow();
+            Supplier s2 = supplierRepository.findBySlug("ervas-naturais").orElseThrow();
+
+            ProductCategory cat = new ProductCategory();
+            cat.setName("Categoria Lote");
+            cat.setSlug("categoria-lote");
+            entityManager.persist(cat);
+
+            Product p1 = new Product();
+            p1.setName("P1");
+            p1.setSlug("p1");
+            p1.setCategory(cat);
+            p1.setSupplier(s1);
+            entityManager.persist(p1);
+
+            Product p2 = new Product();
+            p2.setName("P2");
+            p2.setSlug("p2");
+            p2.setCategory(cat);
+            p2.setSupplier(s1);
+            entityManager.persist(p2);
+
+            Product p3 = new Product();
+            p3.setName("P3");
+            p3.setSlug("p3");
+            p3.setCategory(cat);
+            p3.setSupplier(s2);
+            entityManager.persist(p3);
+
+            entityManager.flush();
+
+            List<Object[]> results = supplierRepository.countProductsPerSupplier();
+
+            assertFalse(results.isEmpty());
+
+            boolean s1Found = results.stream()
+                    .anyMatch(obj -> obj[0].equals("fornecedor-de-ervas") && ((Long) obj[1]) == 2L);
+
+            boolean s2Found = results.stream()
+                    .anyMatch(obj -> obj[0].equals("ervas-naturais") && ((Long) obj[1]) == 1L);
+
+            assertTrue(s1Found, "Deveria encontrar 2 produtos para o fornecedor-de-ervas");
+            assertTrue(s2Found, "Deveria encontrar 1 produto para as ervas-naturais");
         }
     }
 }
