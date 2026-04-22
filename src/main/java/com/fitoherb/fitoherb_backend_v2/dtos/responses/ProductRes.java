@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -21,6 +23,12 @@ public class ProductRes {
 
     @Schema(description = "Detailed description of the product and its health benefits", example = "Flores de camomila desidratadas, ideais para infusões relaxantes.")
     private String description;
+
+    @Schema(description = "flavours available for that product", example = "chocolate")
+    private List<String> flavours;
+
+    @Schema(description = "SEO-friendly unique identifier used in URLs", example = "cha-de-ervas")
+    private String slug;
 
     @Schema(description = "Details of the category this product belongs to")
     private ProductCategoryRes category;

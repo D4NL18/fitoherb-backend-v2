@@ -14,6 +14,7 @@ public class ValidationConstants {
     public static final int MAX_TEXT_LENGTH = 5000;
     public static final int MIN_STRING_LENGTH = 3;
     public static final int MIN_PASSWORD_LENGTH = 8;
+    public static final int MAX_ARRAY_SIZE = 20;
 
     // EXPRESSÕES REGULARES (REGEX)
     @SuppressWarnings("java:S2068")
@@ -34,6 +35,7 @@ public class ValidationConstants {
     public static final String MSG_STRING_SIZE = "This field must be between " + MIN_STRING_LENGTH + AND + MAX_STRING_LENGTH + CHARACTERS_SUFFIX;
     public static final String MSG_TEXT_SIZE = "This field must be between " + MIN_STRING_LENGTH + AND + MAX_TEXT_LENGTH + CHARACTERS_SUFFIX;
     public static final String MSG_PASSWORD_SIZE = "Password must be between " + MIN_PASSWORD_LENGTH + AND + MAX_STRING_LENGTH + CHARACTERS_SUFFIX;
+    public static final String MSG_ARRAY_SIZE = "Max array size is " + MAX_ARRAY_SIZE;
 
     // Datas (Past)
     public static final String MSG_DATE_PAST = "Date must be in the past";

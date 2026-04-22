@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.*;
 
 @Getter
@@ -30,4 +32,8 @@ public class ProductReq {
     @Schema(description = "The unique SEO slug of the associated supplier", example = "fitoherb-natural-ltda")
     @NotBlank(message = MSG_REQUIRED_FIELD)
     private String supplierSlug;
+
+    @Schema(description = "Flavours available for that product", example = "[\"Chocolate\", \"Morango\", \"Baunilha\"]")
+    @Size(max = MAX_ARRAY_SIZE, message = MSG_ARRAY_SIZE)
+    private List<String> flavours;
 }

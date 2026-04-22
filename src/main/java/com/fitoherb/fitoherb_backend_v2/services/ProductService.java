@@ -52,7 +52,7 @@ public class ProductService {
 
     public Page<ProductRes> getProductGallery(String search, String category, String supplier, int page, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, 18, Sort.by(sortDirection, "name"));
+        Pageable pageable = PageRequest.of(page, 9, Sort.by(sortDirection, "name"));
 
         Specification<Product> spec = Specification.where((root, query, cb) -> cb.conjunction());
 
