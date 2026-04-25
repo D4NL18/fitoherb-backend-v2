@@ -37,7 +37,7 @@ public class ProductService {
 
     private final FileStorageService fileStorageService;
 
-    private static final String PRODUCT_NOT_FOUND_MSG = "Product not found with slug: ";
+    private static final String PRODUCT_NOT_FOUND_MSG = "Produto não encontrado com slug: ";
 
     public Page<ProductRes> getAllProductsPaginated(String search, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -58,7 +58,7 @@ public class ProductService {
 
         if (category != null && !category.isBlank()) {
             if (!categoryRepository.findBySlug(category).isPresent()) {
-                throw new ResourceNotFoundException("Category not found with slug: " + category);
+                throw new ResourceNotFoundException("Categoria não encontrada com slug: " + category);
             }
             spec = spec.and((root, query, cb) ->
                     cb.equal(root.get("category").get("slug"), category)
@@ -67,7 +67,7 @@ public class ProductService {
 
         if (supplier != null && !supplier.isBlank()) {
             if (!supplierRepository.findBySlug(supplier).isPresent()) {
-                throw new ResourceNotFoundException("Supplier not found with slug: " + supplier);
+                throw new ResourceNotFoundException("Fornecedor não encontrado com slug: " + supplier);
             }
             spec = spec.and((root, query, cb) ->
                     cb.equal(root.get("supplier").get("slug"), supplier)
@@ -93,21 +93,21 @@ public class ProductService {
     @Transactional
     public Product createProduct(ProductReq productReq, MultipartFile image) {
         if (this.productRepository.findByName(productReq.getName()).isPresent()) {
-            throw new ResourceAlreadyExistsException("Product with that name already exists");
+            throw new ResourceAlreadyExistsException("Já existe um produto com esse nome");
         }
 
         String generatedSlug = StringUtils.toSlug(productReq.getName());
         if (this.productRepository.findBySlug(generatedSlug).isPresent()) {
             throw new ResourceAlreadyExistsException(
-                    "A product with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+                    "Já existe um produto com um nome similar (Conflito de slug: " + generatedSlug + ")"
             );
         }
 
         ProductCategory category = categoryRepository.findBySlug(productReq.getCategorySlug())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with slug: " + productReq.getCategorySlug()));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada com slug: " + productReq.getCategorySlug()));
 
         Supplier supplier = supplierRepository.findBySlug(productReq.getSupplierSlug())
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with slug: " + productReq.getSupplierSlug()));
+                .orElseThrow(() -> new ResourceNotFoundException("Fornecedor não encontrado com slug: " + productReq.getSupplierSlug()));
 
         String fileName = null;
         if (image != null && !image.isEmpty()) {
@@ -132,7 +132,7 @@ public class ProductService {
 
         if (!product.getSlug().equals(generatedSlug) && this.productRepository.findBySlug(generatedSlug).isPresent()) {
             throw new ResourceAlreadyExistsException(
-                    "A product with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+                    "Já existe um produto com um nome similar (Conflito de slug: " + generatedSlug + ")"
             );
         }
 
@@ -148,7 +148,7 @@ public class ProductService {
 
             productRepository.save(product);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update product in database.", e);
+            throw new DatabaseOperationException("Falha ao atualizar produto no banco de dados.", e);
         }
     }
 
@@ -160,7 +160,7 @@ public class ProductService {
             fileStorageService.deleteProductImage(product.getImagePath());
             this.productRepository.delete(product);
         }catch(Exception e) {
-            throw new DatabaseOperationException("Failed to delete product. Ensure there are no records linked to this account.", e);
+            throw new DatabaseOperationException("Falha ao excluir produto. Verifique se não há registros vinculados a este cadastro.", e);
         }
     }
 

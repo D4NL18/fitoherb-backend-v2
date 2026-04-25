@@ -7,6 +7,6 @@ public class ResourceAlreadyExistsException extends RuntimeException {
     }
 
     public ResourceAlreadyExistsException(String resourceName, String fieldName, String value) {
-        super(String.format("%s with %s '%s' already exists", resourceName, fieldName, value));
+        super(String.format("%s com %s '%s' já existe", resourceName, fieldName, value));
     }
 }

@@ -26,7 +26,7 @@ public class FileStorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
     private String storeFile(MultipartFile file, String baseDirPath) {
-        if (file.isEmpty()) throw new FileStorageException("Failed to store empty file.");
+        if (file.isEmpty()) throw new FileStorageException("Não é possível armazenar um arquivo vazio.");
 
         try {
             Path directory = Paths.get(baseDirPath).toAbsolutePath().normalize();
@@ -47,13 +47,13 @@ public class FileStorageService {
             Path targetLocation = directory.resolve(fileName).normalize();
 
             if (!targetLocation.startsWith(directory)) {
-                throw new SecurityException("Invalid path attempted for file storage.");
+                throw new SecurityException("Caminho inválido para armazenamento de arquivo.");
             }
 
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             return fileName;
         } catch (IOException e) {
-            throw new FileStorageException("Could not store file. Error: " + e.getMessage());
+            throw new FileStorageException("Não foi possível armazenar o arquivo. Erro: " + e.getMessage());
         }
     }
 

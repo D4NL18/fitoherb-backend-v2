@@ -6,8 +6,8 @@ public class ValidationConstants {
         throw new IllegalStateException("Utility class");
     }
 
-    private static final String CHARACTERS_SUFFIX = " characters";
-    private static final String AND = " and ";
+    private static final String CARACTERES_SUFIXO = " caracteres";
+    private static final String E = " e ";
 
     // TAMANHOS (LENGTHS)
     public static final int MAX_STRING_LENGTH = 255;
@@ -26,23 +26,23 @@ public class ValidationConstants {
     // MENSAGENS PADRONIZADAS (MESSAGES)
 
     // Obrigatório (NotNull / NotBlank)
-    public static final String MSG_REQUIRED_FIELD = "This field cannot be blank or null";
+    public static final String MSG_REQUIRED_FIELD = "Este campo não pode estar vazio ou nulo";
 
     // E-mail
-    public static final String MSG_EMAIL_INVALID = "E-mail must be valid";
+    public static final String MSG_EMAIL_INVALID = "O e-mail deve ser válido";
 
     // Tamanhos (Sizes)
-    public static final String MSG_STRING_SIZE = "This field must be between " + MIN_STRING_LENGTH + AND + MAX_STRING_LENGTH + CHARACTERS_SUFFIX;
-    public static final String MSG_TEXT_SIZE = "This field must be between " + MIN_STRING_LENGTH + AND + MAX_TEXT_LENGTH + CHARACTERS_SUFFIX;
-    public static final String MSG_PASSWORD_SIZE = "Password must be between " + MIN_PASSWORD_LENGTH + AND + MAX_STRING_LENGTH + CHARACTERS_SUFFIX;
-    public static final String MSG_ARRAY_SIZE = "Max array size is " + MAX_ARRAY_SIZE;
+    public static final String MSG_STRING_SIZE = "Este campo deve ter entre " + MIN_STRING_LENGTH + E + MAX_STRING_LENGTH + CARACTERES_SUFIXO;
+    public static final String MSG_TEXT_SIZE = "Este campo deve ter entre " + MIN_STRING_LENGTH + E + MAX_TEXT_LENGTH + CARACTERES_SUFIXO;
+    public static final String MSG_PASSWORD_SIZE = "A senha deve ter entre " + MIN_PASSWORD_LENGTH + E + MAX_STRING_LENGTH + CARACTERES_SUFIXO;
+    public static final String MSG_ARRAY_SIZE = "O tamanho máximo da lista é " + MAX_ARRAY_SIZE;
 
     // Datas (Past)
-    public static final String MSG_DATE_PAST = "Date must be in the past";
+    public static final String MSG_DATE_PAST = "A data deve estar no passado";
 
     // Senha
-    public static final String MSG_PASSWORD_INVALID = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
+    public static final String MSG_PASSWORD_INVALID = "A senha deve conter pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial";
 
     // SLUG
-    public static final String MSG_SLUG_INVALID = "The slug must contain only lowercase letters, numbers, and hyphens";
+    public static final String MSG_SLUG_INVALID = "O slug deve conter apenas letras minúsculas, números e hífens";
 }

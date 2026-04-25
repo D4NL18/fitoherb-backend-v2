@@ -60,7 +60,7 @@ public class AuthorizationService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com e-mail: " + email));
     }
 
     public String login(LoginReq loginReq) {
@@ -74,7 +74,7 @@ public class AuthorizationService implements UserDetailsService {
     @Transactional
     public User register(RegisterReq registerReq) {
         if (this.userRepository.findByEmail(registerReq.getEmail()).isPresent()) {
-            throw new ResourceAlreadyExistsException("E-mail already in use");
+            throw new ResourceAlreadyExistsException("E-mail já está em uso");
         }
 
         String rawPassword = generateSecurePassword();
@@ -92,7 +92,7 @@ public class AuthorizationService implements UserDetailsService {
             return savedUser;
         } catch (Exception e) {
             log.error("Failed to register user {}: ", registerReq.getEmail(), e);
-            throw new DatabaseOperationException("Failed to register user. System was unable to save the account.", e);
+            throw new DatabaseOperationException("Falha ao registrar usuário. O sistema não conseguiu salvar a conta.", e);
         }
     }
 

@@ -27,7 +27,7 @@ public class UserService {
 
     private final  PasswordEncoder passwordEncoder;
 
-    private static final String USER_NOT_FOUND_MSG = "User not found with email: ";
+    private static final String USER_NOT_FOUND_MSG = "Usuário não encontrado com e-mail: ";
 
     public UserRes getUserByEmail(String email) {
         User user = this.userRepository.findByEmail(email)
@@ -55,7 +55,7 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update user in database.", e);
+            throw new DatabaseOperationException("Falha ao atualizar usuário no banco de dados.", e);
         }
     }
 
@@ -70,7 +70,7 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update password.", e);
+            throw new DatabaseOperationException("Falha ao atualizar a senha.", e);
         }
     }
 
@@ -82,7 +82,7 @@ public class UserService {
         try {
             this.userRepository.delete(user);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to delete user. Ensure there are no records linked to this account.", e);
+            throw new DatabaseOperationException("Falha ao excluir usuário. Verifique se não há registros vinculados a esta conta.", e);
         }
     }
 }

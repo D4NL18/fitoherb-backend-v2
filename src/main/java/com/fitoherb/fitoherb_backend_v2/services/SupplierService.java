@@ -32,7 +32,7 @@ public class SupplierService {
 
     private final FileStorageService fileStorageService;
 
-    private static final String SUPPLIER_NOT_FOUND_MSG = "Supplier not found with slug: ";
+    private static final String SUPPLIER_NOT_FOUND_MSG = "Fornecedor não encontrado com slug: ";
 
     public SupplierRes getSupplierBySlug(String slug) {
         Supplier supplier = this.supplierRepository.findBySlug(slug)
@@ -85,14 +85,14 @@ public class SupplierService {
     @Transactional
     public Supplier createSupplier(SupplierReq supplierReq, MultipartFile image) {
         if(this.supplierRepository.findByName(supplierReq.getName()).isPresent()) {
-            throw new ResourceAlreadyExistsException("Supplier with that name already exists");
+            throw new ResourceAlreadyExistsException("Já existe um fornecedor com esse nome");
         }
 
         String generatedSlug = StringUtils.toSlug(supplierReq.getName());
 
         if(this.supplierRepository.findBySlug(generatedSlug).isPresent()) {
             throw new ResourceAlreadyExistsException(
-                    "A supplier  with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+                    "Já existe um fornecedor com um nome similar (Conflito de slug: " + generatedSlug + ")"
             );
         }
 
@@ -117,7 +117,7 @@ public class SupplierService {
 
         if (!supplier.getSlug().equals(generatedSlug) && this.supplierRepository.findBySlug(generatedSlug).isPresent()) {
             throw new ResourceAlreadyExistsException(
-                    "A supplier with a similar name already exists (Slug conflict: " + generatedSlug + ")"
+                    "Já existe um fornecedor com um nome similar (Conflito de slug: " + generatedSlug + ")"
             );
         }
 
@@ -133,7 +133,7 @@ public class SupplierService {
 
             supplierRepository.save(supplier);
         } catch (Exception e) {
-            throw new DatabaseOperationException("Failed to update supplier in database.", e);
+            throw new DatabaseOperationException("Falha ao atualizar fornecedor no banco de dados.", e);
         }
     }
 
@@ -145,7 +145,7 @@ public class SupplierService {
             fileStorageService.deleteSupplierImage(supplier.getImagePath());
             this.supplierRepository.delete(supplier);
         }catch(Exception e) {
-            throw new DatabaseOperationException("Failed to delete supplier. Ensure there are no records linked to this account.", e);
+            throw new DatabaseOperationException("Falha ao excluir fornecedor. Verifique se não há registros vinculados a este cadastro.", e);
         }
     }
 }

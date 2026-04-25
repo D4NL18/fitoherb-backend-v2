@@ -27,7 +27,7 @@ public class TokenService {
                     .withExpiresAt(genExpirationDate())
                     .sign(algorithm);
         }catch (JWTVerificationException _) {
-            throw new InvalidTokenException("Error generating token JWT");
+            throw new InvalidTokenException("Erro ao gerar token JWT");
         }
     }
 
@@ -40,7 +40,7 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
         }catch (JWTVerificationException _) {
-            throw new InvalidTokenException("Token JWT invalid or expired");
+            throw new InvalidTokenException("Token JWT inválido ou expirado");
         }
     }
 

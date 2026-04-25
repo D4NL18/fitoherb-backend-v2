@@ -35,7 +35,7 @@ public class RestExceptionHandler {
 
         RestValidationErrorMessage response = new RestValidationErrorMessage(
                 HttpStatus.BAD_REQUEST,
-                "Validation failed for one or more fields",
+                "Falha na validação de um ou mais campos",
                 fieldErrors
         );
 
@@ -51,7 +51,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<RestErrorMessage> handleMessageNotReadable(HttpMessageNotReadableException ex) {
 
-        String message = "Invalid data format. Please ensure that dates are in the correct format and all fields match their expected types.";
+        String message = "Formato de dados inválido. Certifique-se de que as datas estão no formato correto e todos os campos correspondem aos tipos esperados.";
 
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.BAD_REQUEST, message);
 
@@ -61,7 +61,7 @@ public class RestExceptionHandler {
     @ExceptionHandler({BadCredentialsException.class, InternalAuthenticationServiceException.class})
     public ResponseEntity<RestErrorMessage> invalidCredentialsHandler(Exception exception) {
 
-        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.UNAUTHORIZED, "E-mail or password invalid.");
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.UNAUTHORIZED, "E-mail ou senha inválidos.");
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
@@ -81,7 +81,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<RestErrorMessage> methodNotSupportedHandler(HttpRequestMethodNotSupportedException ex) {
 
-        String message = String.format("The HTTP method '%s' is not supported for this endpoint.", ex.getMethod());
+        String message = String.format("O método HTTP '%s' não é suportado para este endpoint.", ex.getMethod());
 
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.METHOD_NOT_ALLOWED, message);
 
@@ -93,7 +93,7 @@ public class RestExceptionHandler {
 
         RestErrorMessage errorResponse = new RestErrorMessage(
                 HttpStatus.FORBIDDEN,
-                "Access denied: You do not have the necessary permissions to access this resource."
+                "Acesso negado: Você não possui as permissões necessárias para acessar este recurso."
         );
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
@@ -106,14 +106,14 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler(InvalidDataAccessApiUsageException.class)
-    public ResponseEntity<RestErrorMessage> handleInvalidDataAccess(org.springframework.dao.InvalidDataAccessApiUsageException ex) {
-        String message = "Invalid request: check if the sort field or query parameters are correct.";
+    public ResponseEntity<RestErrorMessage> handleInvalidDataAccess(InvalidDataAccessApiUsageException ex) {
+        String message = "Requisição inválida: verifique se o campo de ordenação ou os parâmetros de consulta estão corretos.";
         String rawMessage = ex.getMessage();
 
         if (rawMessage != null && rawMessage.contains("Could not resolve attribute")) {
             var matcher = java.util.regex.Pattern.compile("'([^']*)'").matcher(rawMessage);
             if (matcher.find()) {
-                message = "Invalid sort field: " + matcher.group(1);
+                message = "Campo de ordenação inválido: " + matcher.group(1);
             }
         }
 
@@ -122,27 +122,27 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<RestErrorMessage> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<RestErrorMessage> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         Class<?> requiredType = ex.getRequiredType();
-        String typeName = (requiredType != null) ? requiredType.getSimpleName() : "unknown type";
-        String message = String.format("The parameter '%s' should be of type '%s'", ex.getName(), typeName);
+        String typeName = (requiredType != null) ? requiredType.getSimpleName() : "tipo desconhecido";
+        String message = String.format("O parâmetro '%s' deve ser do tipo '%s'", ex.getName(), typeName);
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.BAD_REQUEST, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<RestErrorMessage> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
-        String message = "Data integrity violation. Resource already being used.";
+    public ResponseEntity<RestErrorMessage> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String message = "Violação de integridade de dados. O recurso já está sendo utilizado ou existe um conflito de dados.";
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, message);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RestErrorMessage> handleGenericException(Exception ex) {
-        log.error("Unhandled exception caught: ", ex);
+        log.error("Exceção não tratada capturada: ", ex);
         RestErrorMessage errorResponse = new RestErrorMessage(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred. Please contact the administrator."
+                "Ocorreu um erro inesperado. Por favor, entre em contato com o administrador."
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
@@ -150,6 +150,6 @@ public class RestExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<RestErrorMessage> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new RestErrorMessage(HttpStatus.BAD_REQUEST, "File exceeded the storage limit (10MB)."));
+                .body(new RestErrorMessage(HttpStatus.BAD_REQUEST, "O arquivo excedeu o limite de armazenamento (10MB)."));
     }
 }
