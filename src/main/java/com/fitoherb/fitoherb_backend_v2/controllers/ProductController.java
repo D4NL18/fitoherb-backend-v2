@@ -172,7 +172,7 @@ public class ProductController {
     ResponseEntity<Void> updateProductBySlug(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart(value = "product") @Valid ProductReq productReq,
-            @RequestPart(value = "image") MultipartFile image,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         productService.updateProductBySlug(productReq, image, slug);

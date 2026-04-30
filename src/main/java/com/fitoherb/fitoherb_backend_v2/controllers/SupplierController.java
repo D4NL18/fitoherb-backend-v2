@@ -150,7 +150,7 @@ public class SupplierController {
             @RequestBody(content = @Content(encoding = @Encoding(name = "supplier", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart("supplier") @Valid SupplierReq supplierReq,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug,
-            @RequestPart(value = "image", required = true) MultipartFile image
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         supplierService.updateSupplierBySlug(supplierReq, slug, image);
         return ResponseEntity.ok().build();
