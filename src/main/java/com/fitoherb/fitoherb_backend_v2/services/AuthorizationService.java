@@ -57,6 +57,15 @@ public class AuthorizationService implements UserDetailsService {
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 
+    public String refreshToken(String expiredToken) {
+        String email = tokenService.validateAndGetSubjectEvenIfExpired(expiredToken);
+
+        User user = (User) userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        return tokenService.generateToken(user);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
