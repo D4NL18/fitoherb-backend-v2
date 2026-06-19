@@ -57,3 +57,7 @@ jobs:
           region: '${{ env.REGION }}'
           image: 'us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/fitoherb-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}'
           flags: '--allow-unauthenticated --port=8080'
+          env_vars: |
+            SPRING_DATASOURCE_URL=${{ secrets.PROD_DB_URL }}
+            SPRING_DATASOURCE_USERNAME=${{ secrets.PROD_DB_USERNAME }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}

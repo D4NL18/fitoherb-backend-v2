@@ -1,12 +1,18 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
 import com.fitoherb.fitoherb_backend_v2.exceptions.FileStorageException;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.PostConstruct;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,19 +22,24 @@ import net.coobird.thumbnailator.Thumbnails;
 @Service
 public class FileStorageService {
 
-    @Value("${path.supplierImages}")
-    private String supplierPath;
+    @Value("${gcp.bucket.name:fitoherb-images-bucket}")
+    private String bucketName;
 
-    @Value("${path.categoryImages}")
-    private String categoryPath;
-
-    @Value("${path.productImages}")
-    private String productPath;
-
-    @Value("${path.bannerImages}")
-    private String bannerPath;
+    // Usaremos as variaveis antigas apenas como nomes de "pastas" dentro do bucket
+    private final String supplierFolder = "suppliers";
+    private final String categoryFolder = "categories";
+    private final String productFolder = "products";
+    private final String bannerFolder = "banners";
 
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
+    
+    private Storage storage;
+
+    @PostConstruct
+    private void init() {
+        // Inicializa o client do GCS (ele pega as credenciais automaticamente no Cloud Run)
+        this.storage = StorageOptions.getDefaultInstance().getService();
+    }
 
     private boolean isCompressibleImage(String extension) {
         if (extension == null || extension.isBlank()) return false;
@@ -36,13 +47,10 @@ public class FileStorageService {
         return ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png");
     }
 
-    private String storeFile(MultipartFile file, String baseDirPath) {
+    private String storeFile(MultipartFile file, String folderName) {
         if (file.isEmpty()) throw new FileStorageException("Cannot store an empty file.");
 
         try {
-            Path directory = Paths.get(baseDirPath).toAbsolutePath().normalize();
-            if (!Files.exists(directory)) Files.createDirectories(directory);
-
             String rawFilename = file.getOriginalFilename();
             String extension = "";
 
@@ -55,74 +63,74 @@ public class FileStorageService {
             }
 
             String fileName = UUID.randomUUID().toString() + extension;
-            Path targetLocation = directory.resolve(fileName).normalize();
+            String blobName = folderName + "/" + fileName;
 
-            if (!targetLocation.startsWith(directory)) {
-                throw new SecurityException("Invalid path for file storage.");
-            }
+            byte[] fileBytes;
 
+            // Comprimir a imagem em memoria antes de enviar pro Google Cloud
             if (isCompressibleImage(extension)) {
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
                 Thumbnails.of(file.getInputStream())
                         .scale(1.0)
                         .outputQuality(0.85)
-                        .toFile(targetLocation.toFile());
+                        .toOutputStream(os);
+                fileBytes = os.toByteArray();
             } else {
-                Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+                fileBytes = file.getBytes();
             }
 
+            // Enviar pro GCS
+            BlobId blobId = BlobId.of(bucketName, blobName);
+            BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(file.getContentType()).build();
+            storage.create(blobInfo, fileBytes);
+
             return fileName;
-        } catch (IOException e) {
-            throw new FileStorageException("Could not store the file. Error: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to upload to GCS", e);
+            throw new FileStorageException("Could not store the file in Google Cloud Storage. Error: " + e.getMessage());
         }
     }
 
-    private void deleteFile(String fileName, String baseDirPath) {
+    private void deleteFile(String fileName, String folderName) {
         if (fileName == null || fileName.isEmpty()) return;
 
         try {
-            Path directory = Paths.get(baseDirPath).toAbsolutePath().normalize();
-
-            String cleanFileName = Paths.get(fileName).getFileName().toString();
-            Path filePath = directory.resolve(cleanFileName).normalize();
-
-            if (!filePath.startsWith(directory)) {
-                log.error("Security violation: Attempted path traversal for file deletion: {}", fileName);
-                return;
-            }
-
-            boolean deleted = Files.deleteIfExists(filePath);
+            String blobName = folderName + "/" + fileName;
+            BlobId blobId = BlobId.of(bucketName, blobName);
+            boolean deleted = storage.delete(blobId);
+            
             if (deleted) {
-                log.info("File deleted successfully: {}", cleanFileName);
+                log.info("File deleted successfully from GCS: {}", blobName);
             } else {
-                log.warn("Tried to delete inexisting file: {}", cleanFileName);
+                log.warn("Tried to delete inexisting file from GCS: {}", blobName);
             }
-        } catch (IOException e) {
-            log.error("Error deleting file: {} - Error: {}", fileName, e.getMessage());
+        } catch (Exception e) {
+            log.error("Error deleting file from GCS: {} - Error: {}", fileName, e.getMessage());
         }
     }
 
     public String storeSupplierImage(MultipartFile file) {
-        return storeFile(file, supplierPath);
+        return storeFile(file, supplierFolder);
     }
 
     public void deleteSupplierImage(String fileName) {
-        deleteFile(fileName, supplierPath);
+        deleteFile(fileName, supplierFolder);
     }
 
     public String storeCategoryImage(MultipartFile file) {
-        return storeFile(file, categoryPath);
+        return storeFile(file, categoryFolder);
     }
 
     public void deleteCategoryImage(String fileName) {
-        deleteFile(fileName, categoryPath);
+        deleteFile(fileName, categoryFolder);
     }
 
     public String storeProductImage(MultipartFile file) {
-        return storeFile(file, productPath);
+        return storeFile(file, productFolder);
     }
 
     public void deleteProductImage(String fileName) {
-        deleteFile(fileName, productPath);
+        deleteFile(fileName, productFolder);
     }
 
     public String storeBannerImage(MultipartFile file) {
@@ -143,10 +151,10 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new FileStorageException("Error reading banner image dimensions.");
         }
-        return storeFile(file, bannerPath);
+        return storeFile(file, bannerFolder);
     }
 
     public void deleteBannerImage(String fileName) {
-        deleteFile(fileName, bannerPath);
+        deleteFile(fileName, bannerFolder);
     }
 }

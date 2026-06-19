@@ -18,7 +18,7 @@ public interface ProductMapper {
     @Named("toProductPublicUrl")
     default String generateUrl(String imagePath) {
         if (imagePath == null || imagePath.isEmpty()) return null;
-        return "/uploads/products/" + imagePath;
+        return "https://storage.googleapis.com/fitoherb-images-bucket/products/" + imagePath;
     }
 
     @Mapping(target = "category", ignore = true)

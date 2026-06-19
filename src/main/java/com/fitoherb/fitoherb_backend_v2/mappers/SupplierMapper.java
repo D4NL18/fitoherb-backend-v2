@@ -20,7 +20,7 @@ public interface SupplierMapper {
     @Named("toPublicUrl")
     default String generateUrl(String imagePath) {
         if (imagePath == null || imagePath.isEmpty()) return null;
-        return "/uploads/suppliers/" + imagePath;
+        return "https://storage.googleapis.com/fitoherb-images-bucket/suppliers/" + imagePath;
     }
 
     Supplier reqToEntity(SupplierReq supplierReq);

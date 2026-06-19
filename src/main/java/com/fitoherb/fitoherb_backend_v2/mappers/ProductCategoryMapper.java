@@ -19,7 +19,7 @@ public interface ProductCategoryMapper {
     @Named("toPublicUrl")
     default String generateUrl(String imagePath) {
         if (imagePath == null || imagePath.isEmpty()) return null;
-        return "/uploads/categories/" + imagePath;
+        return "https://storage.googleapis.com/fitoherb-images-bucket/categories/" + imagePath;
     }
 
     ProductCategory reqToEntity(ProductCategoryReq categoryReq);

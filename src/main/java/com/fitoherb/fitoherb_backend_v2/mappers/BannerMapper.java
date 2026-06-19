@@ -23,14 +23,7 @@ public interface BannerMapper {
     @Named("toBannerPublicUrl")
     default String generateUrl(String imagePath) {
         if (imagePath == null || imagePath.isEmpty()) return null;
-        try {
-            return org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/uploads/Banners/")
-                    .path(imagePath)
-                    .toUriString();
-        } catch (Exception e) {
-            return "/uploads/Banners/" + imagePath;
-        }
+        return "https://storage.googleapis.com/fitoherb-images-bucket/banners/" + imagePath;
     }
 
     void updateEntityFromReq(BannerReq bannerReq, @MappingTarget Banner banner);
