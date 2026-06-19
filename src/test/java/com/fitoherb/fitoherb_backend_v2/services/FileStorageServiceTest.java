@@ -39,13 +39,23 @@ class FileStorageServiceTest {
         ReflectionTestUtils.setField(fileStorageService, "productPath", productPath);
     }
 
+    private byte[] getValidImageBytes() {
+        java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+            javax.imageio.ImageIO.write(img, "jpg", baos);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            return new byte[0];
+        }
+    }
+
     @Nested
     @DisplayName("Testes de Armazenamento")
     class StorageTests {
 
         @Test
         void storeSupplierImageSuccess() {
-            MockMultipartFile file = new MockMultipartFile("file", "image.jpg", "image/jpeg", "content".getBytes());
+            MockMultipartFile file = new MockMultipartFile("file", "image.jpg", "image/jpeg", getValidImageBytes());
 
             String fileName = fileStorageService.storeSupplierImage(file);
 
@@ -56,7 +66,7 @@ class FileStorageServiceTest {
 
         @Test
         void storeCategoryImageSuccess() {
-            MockMultipartFile file = new MockMultipartFile("file", "icon.png", "image/png", "content".getBytes());
+            MockMultipartFile file = new MockMultipartFile("file", "icon.png", "image/png", getValidImageBytes());
 
             String fileName = fileStorageService.storeCategoryImage(file);
 
@@ -145,7 +155,7 @@ class FileStorageServiceTest {
                     "file",
                     "foto teste @#$%! óú.png",
                     "image/png",
-                    "data".getBytes()
+                    getValidImageBytes()
             );
 
             String fileName = fileStorageService.storeCategoryImage(file);
@@ -162,7 +172,7 @@ class FileStorageServiceTest {
                     "file",
                     "malicious\0file.jpg",
                     "image/jpeg",
-                    "data".getBytes()
+                    getValidImageBytes()
             );
 
             String fileName = fileStorageService.storeSupplierImage(file);

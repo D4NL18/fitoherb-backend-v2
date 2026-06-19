@@ -11,6 +11,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.coobird.thumbnailator.Thumbnails;
+
 @Service
 public class FileStorageService {
 
@@ -23,10 +25,19 @@ public class FileStorageService {
     @Value("${path.productImages}")
     private String productPath;
 
+    @Value("${path.bannerImages}")
+    private String bannerPath;
+
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
+    private boolean isCompressibleImage(String extension) {
+        if (extension == null || extension.isBlank()) return false;
+        String ext = extension.toLowerCase();
+        return ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png");
+    }
+
     private String storeFile(MultipartFile file, String baseDirPath) {
-        if (file.isEmpty()) throw new FileStorageException("Não é possível armazenar um arquivo vazio.");
+        if (file.isEmpty()) throw new FileStorageException("Cannot store an empty file.");
 
         try {
             Path directory = Paths.get(baseDirPath).toAbsolutePath().normalize();
@@ -47,13 +58,21 @@ public class FileStorageService {
             Path targetLocation = directory.resolve(fileName).normalize();
 
             if (!targetLocation.startsWith(directory)) {
-                throw new SecurityException("Caminho inválido para armazenamento de arquivo.");
+                throw new SecurityException("Invalid path for file storage.");
             }
 
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            if (isCompressibleImage(extension)) {
+                Thumbnails.of(file.getInputStream())
+                        .scale(1.0)
+                        .outputQuality(0.85)
+                        .toFile(targetLocation.toFile());
+            } else {
+                Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            }
+
             return fileName;
         } catch (IOException e) {
-            throw new FileStorageException("Não foi possível armazenar o arquivo. Erro: " + e.getMessage());
+            throw new FileStorageException("Could not store the file. Error: " + e.getMessage());
         }
     }
 
@@ -104,5 +123,30 @@ public class FileStorageService {
 
     public void deleteProductImage(String fileName) {
         deleteFile(fileName, productPath);
+    }
+
+    public String storeBannerImage(MultipartFile file) {
+        try {
+            java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(file.getInputStream());
+            if (image == null) {
+                throw new FileStorageException("The uploaded file is not a valid image.");
+            }
+            int width = image.getWidth();
+            int height = image.getHeight();
+            
+            if (width < 1000) {
+                throw new FileStorageException("The banner image must be at least 1000px wide to prevent distortion on the frontend.");
+            }
+            if (height >= width) {
+                throw new FileStorageException("The banner image must have a horizontal orientation (width must be greater than height).");
+            }
+        } catch (IOException e) {
+            throw new FileStorageException("Error reading banner image dimensions.");
+        }
+        return storeFile(file, bannerPath);
+    }
+
+    public void deleteBannerImage(String fileName) {
+        deleteFile(fileName, bannerPath);
     }
 }

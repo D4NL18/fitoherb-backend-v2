@@ -60,13 +60,13 @@ class SupplierServiceTest {
 
         @Test
         void getAllSuppliersSuccess() {
-            when(supplierRepository.findAll()).thenReturn(List.of(supplierEntity));
+            when(supplierRepository.findAll(org.springframework.data.domain.Sort.by("name"))).thenReturn(List.of(supplierEntity));
             when(supplierMapper.toResList(any())).thenReturn(List.of(supplierRes));
             when(supplierRepository.countProductsPerSupplier()).thenReturn(Collections.singletonList(new Object[]{"fornecedor-original", 10L}));
             List<SupplierRes> result = supplierService.getAllSuppliers();
 
             assertFalse(result.isEmpty());
-            verify(supplierRepository).findAll();
+            verify(supplierRepository).findAll(org.springframework.data.domain.Sort.by("name"));
             verify(supplierRepository).countProductsPerSupplier();
         }
 
@@ -97,7 +97,7 @@ class SupplierServiceTest {
 
         @Test
         void getAllSuppliersHandlesMissingCountGracefully() {
-            when(supplierRepository.findAll()).thenReturn(List.of(supplierEntity));
+            when(supplierRepository.findAll(org.springframework.data.domain.Sort.by("name"))).thenReturn(List.of(supplierEntity));
             when(supplierMapper.toResList(any())).thenReturn(List.of(supplierRes));
             when(supplierRepository.countProductsPerSupplier()).thenReturn(Collections.emptyList());
 

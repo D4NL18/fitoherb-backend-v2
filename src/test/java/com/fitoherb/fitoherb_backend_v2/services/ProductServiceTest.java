@@ -98,11 +98,9 @@ class ProductServiceTest {
         @SuppressWarnings("unchecked")
         void getProductGalleryWithFiltersSuccess() {
             Page<Product> page = new PageImpl<>(List.of(productEntity));
-            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
-            when(supplierRepository.findBySlug("sup")).thenReturn(Optional.of(supplier));
             when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-            Page<ProductRes> result = productService.getProductGallery("query", "cat", "sup", 0, "ASC");
+            Page<ProductRes> result = productService.getProductGallery("query", List.of("cat"), List.of("sup"), 0, "ASC");
 
             assertNotNull(result);
             verify(productRepository).findAll(any(Specification.class), any(Pageable.class));

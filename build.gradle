@@ -35,6 +35,7 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
 	implementation 'com.auth0:java-jwt:4.4.0'
+	implementation 'net.coobird:thumbnailator:0.4.20'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
