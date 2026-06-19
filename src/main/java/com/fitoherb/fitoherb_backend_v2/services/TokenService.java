@@ -27,7 +27,7 @@ public class TokenService {
                     .withSubject(user.getEmail())
                     .withExpiresAt(genExpirationDate())
                     .sign(algorithm);
-        } catch (JWTVerificationException _) {
+        } catch (JWTVerificationException e) {
             throw new InvalidTokenException("Erro ao gerar token JWT");
         }
     }
@@ -40,7 +40,7 @@ public class TokenService {
                     .build()
                     .verify(token)
                     .getSubject();
-        } catch (JWTVerificationException _) {
+        } catch (JWTVerificationException e) {
             throw new InvalidTokenException("Token JWT inválido ou expirado");
         }
     }
