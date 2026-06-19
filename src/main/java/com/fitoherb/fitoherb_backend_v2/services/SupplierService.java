@@ -46,7 +46,7 @@ public class SupplierService {
     }
 
     public List<SupplierRes> getAllSuppliers() {
-        List<Supplier> supplierList = this.supplierRepository.findAll();
+        List<Supplier> supplierList = this.supplierRepository.findAll(Sort.by("name"));
         List<SupplierRes> resList = supplierMapper.toResList(supplierList);
 
         enrichWithProductCount(resList);

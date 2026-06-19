@@ -104,11 +104,11 @@ public class ProductController {
             @Parameter(description = "Search by product name", example = "Tea")
             @RequestParam(required = false) String search,
 
-            @Parameter(description = "Filter by category slug", example = "essential-oils")
-            @RequestParam(required = false) String category,
+            @Parameter(description = "Filter by category slugs", example = "essential-oils,herbs")
+            @RequestParam(required = false) java.util.List<String> category,
 
-            @Parameter(description = "Filter by supplier slug", example = "nature-labs")
-            @RequestParam(required = false) String supplier,
+            @Parameter(description = "Filter by supplier slugs", example = "nature-labs,vita-supplements")
+            @RequestParam(required = false) java.util.List<String> supplier,
 
             @Parameter(description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,

@@ -50,28 +50,28 @@ public class ProductService {
         return productPage.map(productMapper::entityToRes);
     }
 
-    public Page<ProductRes> getProductGallery(String search, String category, String supplier, int page, String direction) {
+    public Page<ProductRes> getProductGallery(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, 9, Sort.by(sortDirection, "name"));
 
         Specification<Product> spec = Specification.where((root, query, cb) -> cb.conjunction());
 
-        if (category != null && !category.isBlank()) {
-            if (!categoryRepository.findBySlug(category).isPresent()) {
-                throw new ResourceNotFoundException("Categoria não encontrada com slug: " + category);
+        if (categories != null && !categories.isEmpty()) {
+            java.util.List<String> validCategories = categories.stream().filter(c -> c != null && !c.isBlank()).toList();
+            if (!validCategories.isEmpty()) {
+                spec = spec.and((root, query, cb) ->
+                        root.get("category").get("slug").in(validCategories)
+                );
             }
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("category").get("slug"), category)
-            );
         }
 
-        if (supplier != null && !supplier.isBlank()) {
-            if (!supplierRepository.findBySlug(supplier).isPresent()) {
-                throw new ResourceNotFoundException("Fornecedor não encontrado com slug: " + supplier);
+        if (suppliers != null && !suppliers.isEmpty()) {
+            java.util.List<String> validSuppliers = suppliers.stream().filter(s -> s != null && !s.isBlank()).toList();
+            if (!validSuppliers.isEmpty()) {
+                spec = spec.and((root, query, cb) ->
+                        root.get("supplier").get("slug").in(validSuppliers)
+                );
             }
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("supplier").get("slug"), supplier)
-            );
         }
 
         if (search != null && !search.isBlank()) {
