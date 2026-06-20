@@ -61,3 +61,6 @@ jobs:
             SPRING_DATASOURCE_URL=${{ secrets.PROD_DB_URL }}
             SPRING_DATASOURCE_USERNAME=${{ secrets.PROD_DB_USERNAME }}
             SPRING_DATASOURCE_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
+            PostgresPassword=${{ secrets.PROD_DB_PASSWORD }}
+            mailSenderUsername=${{ secrets.MAIL_USERNAME }}
+            mailSenderPassword=${{ secrets.MAIL_PASSWORD }}
