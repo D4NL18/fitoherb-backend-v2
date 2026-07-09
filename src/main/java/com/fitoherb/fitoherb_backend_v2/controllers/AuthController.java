@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -53,6 +54,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Validation error", content = @Content(schema = @Schema(implementation = RestValidationErrorMessage.class), examples = @ExampleObject(name = "Registration Validation Error", value = "{\"status\": \"BAD_REQUEST\", \"message\": \"Validation failed for one or more fields\", \"errors\": {\"birthDate\": \"must be a past date\", \"role\": \"must not be null\"}}"))),
             @ApiResponse(responseCode = "500", description = "Internal error", content = @Content(schema = @Schema(implementation = RestErrorMessage.class), examples = @ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"An unexpected error occurred. Please contact the administrator.\"}")))
     })
+    @PreAuthorize("@authorizationService.isAdmin()")
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterReq registerReq) {
         User savedUser = authService.register(registerReq);

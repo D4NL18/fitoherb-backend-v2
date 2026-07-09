@@ -75,8 +75,13 @@ public class ProductService {
         }
 
         if (search != null && !search.isBlank()) {
+            String searchPattern = "%" + search.toLowerCase() + "%";
             spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")
+                    cb.or(
+                            cb.like(cb.lower(root.get("name")), searchPattern),
+                            cb.like(cb.lower(root.get("category").get("name")), searchPattern),
+                            cb.like(cb.lower(root.get("supplier").get("name")), searchPattern)
+                    )
             );
         }
 
