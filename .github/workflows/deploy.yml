@@ -63,5 +63,6 @@ jobs:
             PostgresUsername=${{ secrets.PROD_DB_USERNAME }}
             SPRING_DATASOURCE_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
             PostgresPassword=${{ secrets.PROD_DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
             mailSenderUsername=${{ secrets.MAIL_USERNAME }}
             mailSenderPassword=${{ secrets.MAIL_PASSWORD }}
