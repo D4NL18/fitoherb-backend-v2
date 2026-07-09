@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("emails")
+@RequestMapping("/emails")
 @Tag(name = "Emails", description = "Operations related to email communications, such as contact forms and system notifications.")
 public class EmailController {
 

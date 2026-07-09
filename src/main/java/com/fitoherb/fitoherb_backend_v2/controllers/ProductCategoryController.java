@@ -33,7 +33,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("product_categories")
+@RequestMapping("/product_categories")
 @Tag(name = "Product Categories", description = "Management of product classifications. " +
         "Provides operations to organize the catalog into logical groups, including image assets and SEO-friendly slug management.")
 public class ProductCategoryController {
@@ -46,7 +46,7 @@ public class ProductCategoryController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductCategoryRes.class))))
     })
     @GetMapping("/get-all")
-    ResponseEntity<List<ProductCategoryRes>> getAllProductCategories() {
+    public ResponseEntity<List<ProductCategoryRes>> getAllProductCategories() {
         List<ProductCategoryRes> productsList = this.productCategoryService.getAllProductCategories();
         return ResponseEntity.ok(productsList);
     }
@@ -64,7 +64,7 @@ public class ProductCategoryController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @GetMapping("/{slug}")
-    ResponseEntity<ProductCategoryRes> getProductCategoryBySlug(
+    public ResponseEntity<ProductCategoryRes> getProductCategoryBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         ProductCategoryRes categoryRes = this.productCategoryService.getProductCategoryBySlug(slug);
@@ -80,7 +80,7 @@ public class ProductCategoryController {
     })
     @PreAuthorize("@authorizationService.isAuthenticated()")
     @GetMapping
-    ResponseEntity<Page<ProductCategoryRes>> getAllProductCategoriesPaginated(
+    public ResponseEntity<Page<ProductCategoryRes>> getAllProductCategoriesPaginated(
             @Parameter(description = "Search term for filtering by name", example = "Tea")
             @RequestParam(required = false) String search,
 
@@ -115,7 +115,7 @@ public class ProductCategoryController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> createProductCategory(
+    public ResponseEntity<Void> createProductCategory(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product_category", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart("product_category") @Valid ProductCategoryReq categoryReq,
             @RequestPart(value = "image", required = true)@Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
@@ -147,7 +147,7 @@ public class ProductCategoryController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> updateProductCategoryBySlug(
+    public ResponseEntity<Void> updateProductCategoryBySlug(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product_category", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart("product_category") @Valid ProductCategoryReq categoryReq,
             @RequestPart(value = "image", required = false) MultipartFile image,
@@ -169,7 +169,7 @@ public class ProductCategoryController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @DeleteMapping("/{slug}")
-    ResponseEntity<Void> deleteProductCategoryBySlug(
+    public ResponseEntity<Void> deleteProductCategoryBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         productCategoryService.deleteProductCategoryBySlug(slug);

@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("users")
+@RequestMapping("/users")
 @Tag(name = "Users", description = "Management of system users and accounts. " +
         "Handles the identity lifecycle, including profile administration, " +
         "security-sensitive password updates, and paginated directory services.")

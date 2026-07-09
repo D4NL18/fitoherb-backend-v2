@@ -33,6 +33,7 @@ public class SecurityConfigurations {
         try {
             return httpSecurity
                     .csrf(csrf -> csrf.disable())
+                    .cors(org.springframework.security.config.Customizer.withDefaults())
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(authorize -> authorize
                             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

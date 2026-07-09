@@ -28,7 +28,7 @@ import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("auth")
+@RequestMapping("/auth")
 @Tag(name = "Auth", description = "Endpoints for Identity and Access Management (IAM). Handles user registration and secure authentication via JWT (JSON Web Tokens).")
 public class AuthController {
 

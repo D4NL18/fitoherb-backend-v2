@@ -15,9 +15,9 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileStorageServiceTest {
+class LocalFileStorageServiceTest {
 
-    private FileStorageService fileStorageService;
+    private LocalFileStorageService fileStorageService;
 
     @TempDir
     Path tempDir;
@@ -27,16 +27,18 @@ class FileStorageServiceTest {
     private String productPath;
 
     @BeforeEach
-    void setup() {
-        fileStorageService = new FileStorageService();
+    void setup() throws Exception {
+        fileStorageService = new LocalFileStorageService();
+        ReflectionTestUtils.setField(fileStorageService, "storagePath", tempDir.toString());
+        
+        // Use reflection to call private init()
+        java.lang.reflect.Method initMethod = LocalFileStorageService.class.getDeclaredMethod("init");
+        initMethod.setAccessible(true);
+        initMethod.invoke(fileStorageService);
 
         supplierPath = tempDir.resolve("suppliers").toString();
         categoryPath = tempDir.resolve("categories").toString();
         productPath = tempDir.resolve("products").toString();
-
-        ReflectionTestUtils.setField(fileStorageService, "supplierPath", supplierPath);
-        ReflectionTestUtils.setField(fileStorageService, "categoryPath", categoryPath);
-        ReflectionTestUtils.setField(fileStorageService, "productPath", productPath);
     }
 
     private byte[] getValidImageBytes() {

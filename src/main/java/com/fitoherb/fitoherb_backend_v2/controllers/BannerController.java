@@ -33,7 +33,7 @@ import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConst
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("banners")
+@RequestMapping("/banners")
 @Tag(name = "Banners", description = "Management of homepage banners.")
 public class BannerController {
 

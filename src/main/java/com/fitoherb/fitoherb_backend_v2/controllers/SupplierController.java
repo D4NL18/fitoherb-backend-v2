@@ -33,7 +33,7 @@ import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConst
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("suppliers")
+@RequestMapping("/suppliers")
 @Tag(name = "Suppliers", description = "Management of product manufacturers and vendors. " +
         "Handles the lifecycle of business partners, including branding assets and SEO-optimized identification.")
 public class SupplierController {
@@ -46,7 +46,7 @@ public class SupplierController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = SupplierRes.class))))
     })
     @GetMapping("/get-all")
-    ResponseEntity<List<SupplierRes>> getAllSuppliers() {
+    public ResponseEntity<List<SupplierRes>> getAllSuppliers() {
         List<SupplierRes> suppliersList = this.supplierService.getAllSuppliers();
         return ResponseEntity.ok(suppliersList);
     }
@@ -64,7 +64,7 @@ public class SupplierController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @GetMapping("/{slug}")
-    ResponseEntity<SupplierRes> getSupplierBySlug(
+    public ResponseEntity<SupplierRes> getSupplierBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         SupplierRes supplierRes = this.supplierService.getSupplierBySlug(slug);
@@ -80,7 +80,7 @@ public class SupplierController {
     })
     @PreAuthorize("@authorizationService.isAuthenticated()")
     @GetMapping
-    ResponseEntity<Page<SupplierRes>> getAllSuppliersPaginated(
+    public ResponseEntity<Page<SupplierRes>> getAllSuppliersPaginated(
             @Parameter(description = "Search term for filtering by supplier name", example = "Nature")
             @RequestParam(required = false) String search,
 
@@ -115,7 +115,7 @@ public class SupplierController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> createSupplier(
+    public ResponseEntity<Void> createSupplier(
             @RequestBody(content = @Content(encoding = @Encoding(name = "supplier", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart("supplier") @Valid SupplierReq supplierReq,
             @RequestPart(value = "image", required = true) @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
@@ -146,7 +146,7 @@ public class SupplierController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> updateSupplierBySlug(
+    public ResponseEntity<Void> updateSupplierBySlug(
             @RequestBody(content = @Content(encoding = @Encoding(name = "supplier", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart("supplier") @Valid SupplierReq supplierReq,
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug,
@@ -168,7 +168,7 @@ public class SupplierController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @DeleteMapping("/{slug}")
-    ResponseEntity<Void> deleteSupplierBySlug(
+    public ResponseEntity<Void> deleteSupplierBySlug(
             @PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         supplierService.deleteSupplierBySlug(slug);

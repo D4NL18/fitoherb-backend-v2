@@ -35,7 +35,7 @@ import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConst
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("products")
+@RequestMapping("/products")
 @Tag(name = "Products", description = "Comprehensive management of the product catalog. " +
         "Handles the complete product lifecycle, including administrative CRUD operations, image assets, " +
         "and a public-facing gallery with advanced filtering.")
@@ -56,7 +56,7 @@ public class ProductController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @GetMapping("/{slug}")
-    ResponseEntity<ProductRes> getProductBySlug(
+    public ResponseEntity<ProductRes> getProductBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         ProductRes productRes = productService.getProductBySlug(slug);
@@ -72,7 +72,7 @@ public class ProductController {
     })
     @PreAuthorize("@authorizationService.isAuthenticated()")
     @GetMapping
-    ResponseEntity<Page<ProductRes>> getAllProductsPaginated(
+    public ResponseEntity<Page<ProductRes>> getAllProductsPaginated(
             @Parameter(description = "Global search term for product name", example = "Eucalyptus")
             @RequestParam(required = false) String search,
 
@@ -138,7 +138,7 @@ public class ProductController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> createProduct(
+    public ResponseEntity<Void> createProduct(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart(value = "product") @Valid ProductReq productReq,
             @RequestPart(value = "image") @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
@@ -169,7 +169,7 @@ public class ProductController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<Void> updateProductBySlug(
+    public ResponseEntity<Void> updateProductBySlug(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart(value = "product") @Valid ProductReq productReq,
             @RequestPart(value = "image", required = false) MultipartFile image,
@@ -191,7 +191,7 @@ public class ProductController {
     })
     @PreAuthorize("@authorizationService.isAdmin()")
     @DeleteMapping("/{slug}")
-    ResponseEntity<Void> deleteProductBySlug(
+    public ResponseEntity<Void> deleteProductBySlug(
             @PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
         productService.deleteProductBySlug(slug);
