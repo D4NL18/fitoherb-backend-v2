@@ -86,10 +86,10 @@ class ProductServiceTest {
         @Test
         void getAllProductsPaginatedSuccess() {
             Page<Product> page = new PageImpl<>(List.of(productEntity));
-            when(productRepository.findAllFiltered(anyString(), any(Pageable.class))).thenReturn(page);
+            when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
             when(productMapper.entityToRes(any())).thenReturn(productRes);
 
-            Page<ProductRes> result = productService.getAllProductsPaginated("search", 0, "name", "ASC");
+            Page<ProductRes> result = productService.getAllProductsPaginated("search", null, null, 0, "name", "ASC");
 
             assertEquals(1, result.getTotalElements());
         }
@@ -214,9 +214,9 @@ class ProductServiceTest {
             Page<Product> emptyPage = new PageImpl<>(Collections.emptyList());
             String maliciousSearch = "'; DROP TABLE products; --";
 
-            when(productRepository.findAllFiltered(eq(maliciousSearch), any(Pageable.class))).thenReturn(emptyPage);
+            when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(emptyPage);
 
-            assertDoesNotThrow(() -> productService.getAllProductsPaginated(maliciousSearch, 0, "name", "ASC"));
+            assertDoesNotThrow(() -> productService.getAllProductsPaginated(maliciousSearch, null, null, 0, "name", "ASC"));
         }
 
         @Test

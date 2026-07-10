@@ -76,6 +76,12 @@ public class ProductController {
             @Parameter(description = "Global search term for product name", example = "Eucalyptus")
             @RequestParam(required = false) String search,
 
+            @Parameter(description = "Filter by category slugs", example = "essential-oils,herbs")
+            @RequestParam(required = false) java.util.List<String> category,
+
+            @Parameter(description = "Filter by supplier slugs", example = "nature-labs,vita-supplements")
+            @RequestParam(required = false) java.util.List<String> supplier,
+
             @Parameter(description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -85,7 +91,7 @@ public class ProductController {
             @Parameter(description = "Sort direction", schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(defaultValue = "ASC") String direction
     ) {
-        Page<ProductRes> products = this.productService.getAllProductsPaginated(search, page, sortField, direction);
+        Page<ProductRes> products = this.productService.getAllProductsPaginated(search, category, supplier, page, sortField, direction);
         return ResponseEntity.ok(products);
     }
 

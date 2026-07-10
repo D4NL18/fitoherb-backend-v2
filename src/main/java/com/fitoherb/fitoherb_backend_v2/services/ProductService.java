@@ -39,14 +39,36 @@ public class ProductService {
 
     private static final String PRODUCT_NOT_FOUND_MSG = "Produto não encontrado com slug: ";
 
-    public Page<ProductRes> getAllProductsPaginated(String search, int page, String sortField, String direction) {
+    public Page<ProductRes> getAllProductsPaginated(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
-
         Pageable pageable = PageRequest.of(page, 10, Sort.by(sortDirection, sortField));
 
-        String searchTerm = (search == null) ? "" : search;
-        org.springframework.data.domain.Page<Product> productPage = productRepository.findAllFiltered(searchTerm, pageable);
+        Specification<Product> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
 
+            if (categories != null && !categories.isEmpty()) {
+                java.util.List<String> validCategories = categories.stream().filter(c -> c != null && !c.isBlank()).toList();
+                if (!validCategories.isEmpty()) {
+                    predicates.add(root.get("category").get("slug").in(validCategories));
+                }
+            }
+
+            if (suppliers != null && !suppliers.isEmpty()) {
+                java.util.List<String> validSuppliers = suppliers.stream().filter(s -> s != null && !s.isBlank()).toList();
+                if (!validSuppliers.isEmpty()) {
+                    predicates.add(root.get("supplier").get("slug").in(validSuppliers));
+                }
+            }
+
+            if (search != null && !search.isBlank()) {
+                String searchPattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("name")), searchPattern));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        org.springframework.data.domain.Page<Product> productPage = productRepository.findAll(spec, pageable);
         return productPage.map(productMapper::entityToRes);
     }
 
@@ -54,36 +76,34 @@ public class ProductService {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, 9, Sort.by(sortDirection, "name"));
 
-        Specification<Product> spec = Specification.where((root, query, cb) -> cb.conjunction());
+        Specification<Product> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
 
-        if (categories != null && !categories.isEmpty()) {
-            java.util.List<String> validCategories = categories.stream().filter(c -> c != null && !c.isBlank()).toList();
-            if (!validCategories.isEmpty()) {
-                spec = spec.and((root, query, cb) ->
-                        root.get("category").get("slug").in(validCategories)
-                );
+            if (categories != null && !categories.isEmpty()) {
+                java.util.List<String> validCategories = categories.stream().filter(c -> c != null && !c.isBlank()).toList();
+                if (!validCategories.isEmpty()) {
+                    predicates.add(root.get("category").get("slug").in(validCategories));
+                }
             }
-        }
 
-        if (suppliers != null && !suppliers.isEmpty()) {
-            java.util.List<String> validSuppliers = suppliers.stream().filter(s -> s != null && !s.isBlank()).toList();
-            if (!validSuppliers.isEmpty()) {
-                spec = spec.and((root, query, cb) ->
-                        root.get("supplier").get("slug").in(validSuppliers)
-                );
+            if (suppliers != null && !suppliers.isEmpty()) {
+                java.util.List<String> validSuppliers = suppliers.stream().filter(s -> s != null && !s.isBlank()).toList();
+                if (!validSuppliers.isEmpty()) {
+                    predicates.add(root.get("supplier").get("slug").in(validSuppliers));
+                }
             }
-        }
 
-        if (search != null && !search.isBlank()) {
-            String searchPattern = "%" + search.toLowerCase() + "%";
-            spec = spec.and((root, query, cb) ->
-                    cb.or(
-                            cb.like(cb.lower(root.get("name")), searchPattern),
-                            cb.like(cb.lower(root.get("category").get("name")), searchPattern),
-                            cb.like(cb.lower(root.get("supplier").get("name")), searchPattern)
-                    )
-            );
-        }
+            if (search != null && !search.isBlank()) {
+                String searchPattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("name")), searchPattern),
+                        cb.like(cb.lower(root.get("category").get("name")), searchPattern),
+                        cb.like(cb.lower(root.get("supplier").get("name")), searchPattern)
+                ));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
 
         return productRepository.findAll(spec, pageable)
                 .map(productMapper::entityToRes);
