@@ -62,7 +62,7 @@ public class SupplierController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Forbidden", value = "{\"status\": \"FORBIDDEN\", \"message\": \"Access denied: You do not have the necessary permissions to access this resource.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @GetMapping("/{slug}")
     public ResponseEntity<SupplierRes> getSupplierBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
@@ -113,7 +113,7 @@ public class SupplierController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Forbidden", value = "{\"status\": \"FORBIDDEN\", \"message\": \"Access denied: You do not have the necessary permissions to access this resource.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createSupplier(
             @RequestBody(content = @Content(encoding = @Encoding(name = "supplier", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -144,7 +144,7 @@ public class SupplierController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to update supplier in database.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateSupplierBySlug(
             @RequestBody(content = @Content(encoding = @Encoding(name = "supplier", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -166,7 +166,7 @@ public class SupplierController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Integrity Constraint", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to delete supplier. Ensure there are no records linked to this account.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @DeleteMapping("/{slug}")
     public ResponseEntity<Void> deleteSupplierBySlug(
             @PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug

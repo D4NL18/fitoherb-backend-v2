@@ -62,7 +62,7 @@ public class ProductCategoryController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Forbidden", value = "{\"status\": \"FORBIDDEN\", \"message\": \"Access denied: You do not have the necessary permissions to access this resource.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @GetMapping("/{slug}")
     public ResponseEntity<ProductCategoryRes> getProductCategoryBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
@@ -113,7 +113,7 @@ public class ProductCategoryController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to create category.\" }")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createProductCategory(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product_category", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -145,7 +145,7 @@ public class ProductCategoryController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to update category in database.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateProductCategoryBySlug(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product_category", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -167,7 +167,7 @@ public class ProductCategoryController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Integrity Constraint", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to delete category. Ensure there are no records linked to this account.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @DeleteMapping("/{slug}")
     public ResponseEntity<Void> deleteProductCategoryBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug

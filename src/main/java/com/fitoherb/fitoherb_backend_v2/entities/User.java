@@ -40,8 +40,6 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private LocalDate birthDate;
 
     @Column(nullable = false)
     private UserRole role;
@@ -62,11 +60,10 @@ public class User implements UserDetails {
     @Column(name = "updated_by")
     private String updatedBy;
 
-    public User(String email, String encryptedPassword, String name, LocalDate birthDate, UserRole role) {
+    public User(String email, String encryptedPassword, String name, UserRole role) {
         this.email = email;
         this.password = encryptedPassword;
         this.name = name;
-        this.birthDate = birthDate;
         this.role = role;
     }
 

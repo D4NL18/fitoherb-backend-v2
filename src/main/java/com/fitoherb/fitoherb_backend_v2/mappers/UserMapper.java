@@ -13,7 +13,6 @@ public interface UserMapper {
     User resToEntity(UserRes userRes);
 
     @Mapping(target = "createdAt", dateFormat = "dd-MM-yyyy HH:mm:ss")
-    @Mapping(target = "birthDate", dateFormat = "dd-MM-yyyy")
     UserRes entityToRes(User user);
 
     @Mapping(target = "email", ignore = true)

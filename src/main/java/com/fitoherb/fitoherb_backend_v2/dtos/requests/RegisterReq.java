@@ -27,12 +27,6 @@ public class RegisterReq {
     @NotBlank(message = MSG_REQUIRED_FIELD)
     private String name;
 
-    @Schema(description = "User's date of birth in dd-MM-yyyy format", example = "25-10-1995")
-    @Past(message = MSG_DATE_PAST)
-    @NotNull(message = MSG_REQUIRED_FIELD)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_FORMAT)
-    private LocalDate birthDate;
-
     @Schema(description = "User access level within the system", example = "USER")
     @NotNull(message = MSG_REQUIRED_FIELD)
     private UserRole role;

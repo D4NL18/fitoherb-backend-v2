@@ -89,7 +89,7 @@ public class BannerController {
                     content = @Content(schema = @Schema(implementation = com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(name = "Forbidden", value = "{\"status\": \"FORBIDDEN\", \"message\": \"Access denied: You do not have the necessary permissions to access this resource.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @GetMapping("/{id}")
     public ResponseEntity<BannerRes> getBannerById(@PathVariable String id) {
         return ResponseEntity.ok(bannerService.getBannerById(id));
@@ -105,7 +105,7 @@ public class BannerController {
                     content = @Content(schema = @Schema(implementation = com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to save banner.\" }")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createBanner(
             @RequestBody(content = @Content(encoding = @Encoding(name = "banner", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -133,7 +133,7 @@ public class BannerController {
                     content = @Content(schema = @Schema(implementation = com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to update banner in the database.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateBanner(
             @RequestBody(content = @Content(encoding = @Encoding(name = "banner", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -155,7 +155,7 @@ public class BannerController {
                     content = @Content(schema = @Schema(implementation = com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(name = "Integrity Constraint", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to delete banner.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAdmin()")
+    @PreAuthorize("@authorizationService.isAuthenticated()")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBanner(@PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) String id) {
         bannerService.deleteBanner(id);

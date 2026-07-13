@@ -51,7 +51,7 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User registered successfully"),
             @ApiResponse(responseCode = "409", description = "Conflict - Duplicate E-mail", content = @Content(schema = @Schema(implementation = RestErrorMessage.class), examples = @ExampleObject(name = "Email Conflict", value = "{\"status\": \"CONFLICT\", \"message\": \"E-mail already in use\"}"))),
-            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content(schema = @Schema(implementation = RestValidationErrorMessage.class), examples = @ExampleObject(name = "Registration Validation Error", value = "{\"status\": \"BAD_REQUEST\", \"message\": \"Validation failed for one or more fields\", \"errors\": {\"birthDate\": \"must be a past date\", \"role\": \"must not be null\"}}"))),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content(schema = @Schema(implementation = RestValidationErrorMessage.class), examples = @ExampleObject(name = "Registration Validation Error", value = "{\"status\": \"BAD_REQUEST\", \"message\": \"Validation failed for one or more fields\", \"errors\": {\"role\": \"must not be null\"}}"))),
             @ApiResponse(responseCode = "500", description = "Internal error", content = @Content(schema = @Schema(implementation = RestErrorMessage.class), examples = @ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"An unexpected error occurred. Please contact the administrator.\"}")))
     })
     @PreAuthorize("@authorizationService.isAdmin()")

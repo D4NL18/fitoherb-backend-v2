@@ -53,6 +53,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG + email));
 
         try {
+            userMapper.updateEntityFromUserReq(userReq, user);
             userRepository.save(user);
         } catch (Exception e) {
             throw new DatabaseOperationException("Falha ao atualizar usuário no banco de dados.", e);

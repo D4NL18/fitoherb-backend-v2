@@ -50,21 +50,21 @@ class UserRepositoryTest {
         u1.setName("Daniel Marinho");
         u1.setEmail("daniel@fitoherb.com");
         u1.setPassword("pass123");
-        u1.setBirthDate(LocalDate.of(1990, 1, 1));
+
         u1.setRole(UserRole.ADMIN);
 
         User u2 = new User();
         u2.setName("Maria Silva");
         u2.setEmail("maria.silva@test.com");
         u2.setPassword("pass123");
-        u2.setBirthDate(LocalDate.of(1995, 5, 5));
+
         u2.setRole(UserRole.USER);
 
         User u3 = new User();
         u3.setName("João Sousa");
         u3.setEmail("joao.sousa@fitoherb.com");
         u3.setPassword("pass123");
-        u3.setBirthDate(LocalDate.of(1985, 10, 10));
+
         u3.setRole(UserRole.ADMIN);
 
         userRepository.saveAll(List.of(u1, u2, u3));
