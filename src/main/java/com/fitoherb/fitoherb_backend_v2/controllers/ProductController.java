@@ -119,10 +119,13 @@ public class ProductController {
             @Parameter(description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
+            @Parameter(description = "Number of items per page", example = "15")
+            @RequestParam(defaultValue = "15") int size,
+
             @Parameter(description = "Sort direction", schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(defaultValue = "ASC") String direction
     ) {
-        Page<ProductRes> products = productService.getProductGallery(search, category, supplier, page, direction);
+        Page<ProductRes> products = productService.getProductGallery(search, category, supplier, page, size, direction);
         return ResponseEntity.ok(products);
     }
 

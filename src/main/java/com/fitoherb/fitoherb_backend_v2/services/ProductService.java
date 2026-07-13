@@ -72,9 +72,9 @@ public class ProductService {
         return productPage.map(productMapper::entityToRes);
     }
 
-    public Page<ProductRes> getProductGallery(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, String direction) {
+    public Page<ProductRes> getProductGallery(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, int size, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, 9, Sort.by(sortDirection, "name"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "name"));
 
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
