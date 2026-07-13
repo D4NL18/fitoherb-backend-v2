@@ -7,20 +7,14 @@ import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = ImageUrlBuilder.class)
 public interface ProductCategoryMapper {
 
     ProductCategory resToEntity(ProductCategoryRes categoryRes);
 
     @Mapping(target = "createdAt", dateFormat = "dd-MM-yyyy HH:mm:ss")
-    @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toPublicUrl")
+    @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toCategoryPublicUrl")
     ProductCategoryRes entityToRes(ProductCategory category);
-
-    @Named("toPublicUrl")
-    default String generateUrl(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) return null;
-        return "https://storage.googleapis.com/fitoherb-images-bucket/categories/" + imagePath;
-    }
 
     ProductCategory reqToEntity(ProductCategoryReq categoryReq);
 

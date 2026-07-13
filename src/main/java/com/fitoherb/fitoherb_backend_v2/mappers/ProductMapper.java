@@ -8,18 +8,12 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring", uses = {ProductCategoryMapper.class, SupplierMapper.class})
+@Mapper(componentModel = "spring", uses = {ProductCategoryMapper.class, SupplierMapper.class, ImageUrlBuilder.class})
 public interface ProductMapper {
 
     @Mapping(target = "createdAt", dateFormat = "dd-MM-yyyy HH:mm:ss")
     @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toProductPublicUrl")
     ProductRes entityToRes(Product product);
-
-    @Named("toProductPublicUrl")
-    default String generateUrl(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) return null;
-        return "https://storage.googleapis.com/fitoherb-images-bucket/products/" + imagePath;
-    }
 
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "supplier", ignore = true)

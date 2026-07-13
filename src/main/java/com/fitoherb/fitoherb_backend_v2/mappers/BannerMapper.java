@@ -10,7 +10,7 @@ import org.mapstruct.ReportingPolicy;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = ImageUrlBuilder.class)
 public interface BannerMapper {
 
     Banner reqToEntity(BannerReq bannerReq);
@@ -19,12 +19,6 @@ public interface BannerMapper {
     @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toBannerPublicUrl")
     @Mapping(target = "imagePath", source = "imagePath", qualifiedByName = "toBannerPublicUrl")
     BannerRes entityToRes(Banner banner);
-
-    @Named("toBannerPublicUrl")
-    default String generateUrl(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) return null;
-        return "https://storage.googleapis.com/fitoherb-images-bucket/banners/" + imagePath;
-    }
 
     void updateEntityFromReq(BannerReq bannerReq, @MappingTarget Banner banner);
 }

@@ -10,18 +10,12 @@ import org.mapstruct.Named;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = ImageUrlBuilder.class)
 public interface SupplierMapper {
 
     @Mapping(target = "createdAt", dateFormat = "dd-MM-yyyy HH:mm:ss")
-    @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toPublicUrl")
+    @Mapping(target = "imageUrl", source = "imagePath", qualifiedByName = "toSupplierPublicUrl")
     SupplierRes entityToRes(Supplier supplier);
-
-    @Named("toPublicUrl")
-    default String generateUrl(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) return null;
-        return "https://storage.googleapis.com/fitoherb-images-bucket/suppliers/" + imagePath;
-    }
 
     Supplier reqToEntity(SupplierReq supplierReq);
 

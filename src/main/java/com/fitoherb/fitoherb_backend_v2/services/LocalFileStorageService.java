@@ -25,7 +25,7 @@ public class LocalFileStorageService implements FileStorageService {
 
     private static final Logger log = LoggerFactory.getLogger(LocalFileStorageService.class);
 
-    @Value("${local.storage.path:C:/Users/PC/Documents/FitoherbImages}")
+    @Value("${local.storage.path}")
     private String storagePath;
 
     private final String supplierFolder = "suppliers";
