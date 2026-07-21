@@ -24,8 +24,11 @@ public class ProductRes {
     @Schema(description = "Detailed description of the product and its health benefits", example = "Flores de camomila desidratadas, ideais para infusões relaxantes.")
     private String description;
 
-    @Schema(description = "flavours available for that product", example = "chocolate")
+    @Schema(description = "flavours available for that product", example = "chocolate, baunilha")
     private List<String> flavours;
+
+    @Schema(description = "Presentations available for that product", example = "100g, 300g, 500g")
+    private List<String> presentation;
 
     @Schema(description = "SEO-friendly unique identifier used in URLs", example = "cha-de-ervas")
     private String slug;

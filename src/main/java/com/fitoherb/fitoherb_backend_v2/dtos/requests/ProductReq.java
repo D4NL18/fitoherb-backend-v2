@@ -36,4 +36,8 @@ public class ProductReq {
     @Schema(description = "Flavours available for that product", example = "[\"Chocolate\", \"Morango\", \"Baunilha\"]")
     @Size(max = MAX_ARRAY_SIZE, message = MSG_ARRAY_SIZE)
     private List<String> flavours;
+
+    @Schema(description = "Presentations available for that product", example = "[\"100g\", \"250g\", \"500g\"]")
+    @Size(max = MAX_ARRAY_SIZE, message = MSG_ARRAY_SIZE)
+    private List<String> presentation;
 }

@@ -41,6 +41,9 @@ public class Product {
     @Column(name = "flavours")
     private List<String> flavours;
 
+    @Column(name = "presentation")
+    private List<String> presentation;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private ProductCategory category;
