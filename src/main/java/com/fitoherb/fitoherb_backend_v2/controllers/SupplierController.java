@@ -169,9 +169,10 @@ public class SupplierController {
     @PreAuthorize("@authorizationService.isAuthenticated()")
     @DeleteMapping("/{slug}")
     public ResponseEntity<Void> deleteSupplierBySlug(
-            @PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
+            @PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug,
+            @RequestParam(defaultValue = "false") boolean deleteProducts
     ) {
-        supplierService.deleteSupplierBySlug(slug);
+        supplierService.deleteSupplierBySlug(slug, deleteProducts);
         return ResponseEntity.ok().build();
     }
 }

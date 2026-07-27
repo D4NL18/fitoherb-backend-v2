@@ -7,7 +7,9 @@ import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceNotFoundException;
 import com.fitoherb.fitoherb_backend_v2.mappers.SupplierMapper;
+import com.fitoherb.fitoherb_backend_v2.repositories.ProductRepository;
 import com.fitoherb.fitoherb_backend_v2.repositories.SupplierRepository;
+import com.fitoherb.fitoherb_backend_v2.entities.Product;
 import com.fitoherb.fitoherb_backend_v2.utils.StringUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 public class SupplierService {
 
     private final SupplierRepository supplierRepository;
+    private final ProductRepository productRepository;
 
     private final SupplierMapper supplierMapper;
 
@@ -138,9 +141,18 @@ public class SupplierService {
     }
 
     @Transactional
-    public void deleteSupplierBySlug(String slug) {
+    public void deleteSupplierBySlug(String slug, boolean cascade) {
         Supplier supplier = this.supplierRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(SUPPLIER_NOT_FOUND_MSG + slug));
+        
+        if (cascade) {
+            List<Product> products = productRepository.findBySupplierId(supplier.getId());
+            for (Product p : products) {
+                fileStorageService.deleteProductImage(p.getImagePath());
+                productRepository.delete(p);
+            }
+        }
+
         try {
             fileStorageService.deleteSupplierImage(supplier.getImagePath());
             this.supplierRepository.delete(supplier);

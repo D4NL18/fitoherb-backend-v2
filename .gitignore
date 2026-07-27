@@ -38,3 +38,6 @@ out/
 
 # Temporary Automation Scripts
 automation_scripts/
+
+# Uploaded images
+temp_images/

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
-
+import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, String>, JpaSpecificationExecutor<Product> {
     Optional<Product> findBySlug(String slug);
 
@@ -17,4 +17,6 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
     @Query("SELECT p FROM products p WHERE " +
             "LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Product> findAllFiltered(String searchTerm, Pageable pageable);
+
+    List<Product> findBySupplierId(String supplierId);
 }

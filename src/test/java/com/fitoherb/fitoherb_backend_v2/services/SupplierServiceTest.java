@@ -34,6 +34,7 @@ import static org.mockito.Mockito.*;
 class SupplierServiceTest {
 
     @Mock private SupplierRepository supplierRepository;
+    @Mock private com.fitoherb.fitoherb_backend_v2.repositories.ProductRepository productRepository;
     @Mock private SupplierMapper supplierMapper;
     @Mock private FileStorageService fileStorageService;
     @Mock private MultipartFile image;
@@ -185,7 +186,7 @@ class SupplierServiceTest {
         void deleteSupplierSuccess() {
             when(supplierRepository.findBySlug("slug")).thenReturn(Optional.of(supplierEntity));
 
-            supplierService.deleteSupplierBySlug("slug");
+            supplierService.deleteSupplierBySlug("slug", false);
 
             verify(fileStorageService).deleteSupplierImage("logo.jpg");
             verify(supplierRepository).delete(supplierEntity);
@@ -197,7 +198,7 @@ class SupplierServiceTest {
             // Explicit type to avoid ambiguity
             doThrow(new RuntimeException()).when(supplierRepository).delete(any(Supplier.class));
 
-            assertThrows(DatabaseOperationException.class, () -> supplierService.deleteSupplierBySlug("slug"));
+            assertThrows(DatabaseOperationException.class, () -> supplierService.deleteSupplierBySlug("slug", false));
         }
     }
 
