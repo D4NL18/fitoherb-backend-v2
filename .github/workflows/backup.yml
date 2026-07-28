@@ -1,0 +1,25 @@
+name: Export Supabase Database Backup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Instalar cliente do PostgreSQL
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Executar pg_dump
+        env:
+          PGPASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+        run: |
+          pg_dump -h aws-1-us-east-1.pooler.supabase.com -p 5432 -U postgres.jkndojaknuphyjjwzvfg -d postgres --clean --if-exists > fitoherb_backup.sql
+
+      - name: Disponibilizar arquivo de backup para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitoherb_backup
+          path: fitoherb_backup.sql
+          retention-days: 1
