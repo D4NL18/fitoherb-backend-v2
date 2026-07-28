@@ -19,11 +19,11 @@ jobs:
         env:
           PGPASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
           DB_URL: ${{ secrets.PROD_DB_URL }}
+          DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
         run: |
           # Extrai o host da URL JDBC
-          # Ex: jdbc:postgresql://db.udqkagmqvwawffaoyqcx.supabase.co:5432/postgres
           HOST=$(echo $DB_URL | sed -E 's/jdbc:postgresql:\/\/([^:]+).*/\1/')
           
-          echo "Restaurando no host: $HOST"
+          echo "Restaurando no host: $HOST com usuario: $DB_USERNAME"
           
-          docker run --rm -v ${{ github.workspace }}:/workspace -e PGPASSWORD="${PGPASSWORD}" postgres:17 psql -h $HOST -p 5432 -U postgres -d postgres -f /workspace/fitoherb_backup.sql
+          docker run --rm -v ${{ github.workspace }}:/workspace -e PGPASSWORD="${PGPASSWORD}" postgres:17 psql -h $HOST -p 5432 -U "$DB_USERNAME" -d postgres -f /workspace/fitoherb_backup.sql
