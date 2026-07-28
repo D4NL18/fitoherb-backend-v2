@@ -56,7 +56,8 @@ public class SecurityConfigurations {
                 "https://fitoherb.firebaseapp.com",
                 "https://fitoherb.com.br",
                 "https://www.fitoherb.com.br",
-                "https://fitoherb-frontend-prod-973619276831.us-central1.run.app"
+                "https://fitoherb-frontend-prod-973619276831.us-central1.run.app",
+                "https://fitoherb-frontend-qa-973619276831.us-central1.run.app"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
