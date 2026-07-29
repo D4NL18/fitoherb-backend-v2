@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @SpringBootTest
+@ActiveProfiles("test")
 public class ProductServiceSpecTest {
 
     @Autowired
