@@ -120,7 +120,7 @@ class AuthorizationServiceTest {
 
         @Test
         void loginSuccess() {
-            LoginReq req = new LoginReq("user@fitoherb.com", "password");
+            LoginReq req = new LoginReq("user@fitoherb.com", "password", false);
             User user = new User();
             user.setEmail(req.getEmail());
 

@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SpringBootTest
+@ActiveProfiles("test")
 public class BannerSeederTest {
 
     @Autowired
