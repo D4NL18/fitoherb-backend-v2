@@ -22,7 +22,7 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.context.annotation.Profile;
 
 @Service
-@Profile("prod")
+@Profile({"prod", "qa"})
 public class GcsFileStorageService implements FileStorageService {
 
     @Value("${gcp.bucket.name:fitoherb-images-bucket}")
