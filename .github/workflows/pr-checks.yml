@@ -1,0 +1,58 @@
+name: PR Checks (Quality Gate)
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - qa
+      - main
+
+jobs:
+  validate-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    # Spin up a PostgreSQL service container for integration tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: runner
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: fitoherb_v2_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle' # Ativa o cache nativo e seguro das dependências do Gradle
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+        # Passo de segurança crucial: verifica se o gradlew não foi adulterado
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Resolve Dependencies
+        run: ./gradlew dependencies --no-daemon
+        # Baixa as dependências de forma segregada antes dos testes
+
+      - name: Run Unit Tests (Quality Gate)
+        run: ./gradlew test --no-daemon
+        env:
+          PostgresUsername: runner
+          PostgresPassword: password
+        # Executa a suíte de testes passando as credenciais do banco containerizado.
