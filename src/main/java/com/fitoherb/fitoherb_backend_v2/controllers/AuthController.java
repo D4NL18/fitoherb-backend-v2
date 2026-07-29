@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.net.URI;
 
@@ -42,9 +44,10 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Validation failed", content = @Content(schema = @Schema(implementation = RestValidationErrorMessage.class), examples = @ExampleObject(name = "Field Validation Error", value = "{\"status\": \"BAD_REQUEST\", \"message\": \"Validation failed for one or more fields\", \"errors\": {\"email\": \"must be a well-formed email address\", \"password\": \"must not be blank\"}}")))
     })
     @PostMapping("/login")
-    public ResponseEntity<LoginRes> login(@RequestBody @Valid LoginReq loginReq) {
+    public ResponseEntity<LoginRes> login(@RequestBody @Valid LoginReq loginReq, HttpServletResponse response) {
         String token = authService.login(loginReq);
-        return ResponseEntity.ok(new LoginRes(token));
+        setAuthCookies(response, token, loginReq.getEmail(), loginReq.getRememberMe());
+        return ResponseEntity.ok(new LoginRes(token)); // Kept for backwards compatibility if needed, but not used by frontend anymore
     }
 
     @Operation(summary = "Register new user", description = "Creates a new user account in the system database and returns the location URI of the newly created resource.")
@@ -70,14 +73,52 @@ public class AuthController {
 
     @Operation(summary = "Refresh token", description = "Receives an expired (but validly signed) token and returns a fresh one.")
     @PostMapping("/refresh")
-    public ResponseEntity<LoginRes> refresh(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+    public ResponseEntity<LoginRes> refresh(
+            @org.springframework.web.bind.annotation.CookieValue(value = "fitoherb_jwt", required = false) String jwtCookie,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            HttpServletResponse response) {
+            
+        String token = jwtCookie;
+        if (token == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.replace("Bearer ", "");
+        }
+
+        if (token == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        String token = authHeader.replace("Bearer ", "");
         String newToken = authService.refreshToken(token);
+        
+        // We can't know the user's email directly here without decoding the token, but TokenService has a method for it.
+        // Let's decode it:
+        String email = com.auth0.jwt.JWT.decode(newToken).getSubject();
+        
+        // We assume session cookie if we are refreshing, or maybe long lived. We don't have rememberMe flag here.
+        // For safety, we keep it as a session cookie or 30 days. Let's just do 30 days.
+        setAuthCookies(response, newToken, email, true);
 
         return ResponseEntity.ok(new LoginRes(newToken));
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        setAuthCookies(response, null, null, false); // This will effectively clear the cookies since token is null, we can customize this
+        return ResponseEntity.ok().build();
+    }
+
+    private void setAuthCookies(HttpServletResponse response, String token, String email, Boolean rememberMe) {
+        int maxAge = (token == null) ? 0 : ((rememberMe != null && rememberMe) ? 30 * 24 * 60 * 60 : -1);
+
+        Cookie jwtCookie = new Cookie("fitoherb_jwt", token == null ? "" : token);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(maxAge);
+        response.addCookie(jwtCookie);
+
+        Cookie emailCookie = new Cookie("fitoherb_user_email", email == null ? "" : email);
+        emailCookie.setHttpOnly(false);
+        emailCookie.setPath("/");
+        emailCookie.setMaxAge(maxAge);
+        response.addCookie(emailCookie);
     }
 }

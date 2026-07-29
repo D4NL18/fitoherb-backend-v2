@@ -3,6 +3,7 @@ package com.fitoherb.fitoherb_backend_v2.dtos.requests;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConst
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Schema(description = "Request object for user authentication")
 public class LoginReq {
 
@@ -23,4 +25,7 @@ public class LoginReq {
     @Schema(description = "User's account password", example = "P@ssword123!")
     @NotBlank(message = MSG_REQUIRED_FIELD)
     private String password;
+
+    @Schema(description = "If true, session will be persisted with a long-lived cookie", example = "true")
+    private Boolean rememberMe;
 }

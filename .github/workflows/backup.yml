@@ -8,14 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Instalar cliente do PostgreSQL
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Executar pg_dump
+      - name: Executar pg_dump via Docker
         env:
           PGPASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
-          pg_dump -h aws-1-us-east-1.pooler.supabase.com -p 5432 -U postgres.jkndojaknuphyjjwzvfg -d postgres --clean --if-exists > fitoherb_backup.sql
+          docker run --rm -e PGPASSWORD="${PGPASSWORD}" postgres:17 pg_dump -h aws-1-us-east-1.pooler.supabase.com -p 5432 -U postgres.jkndojaknuphyjjwzvfg -d postgres --clean --if-exists --inserts > fitoherb_backup.sql
 
       - name: Disponibilizar arquivo de backup para Download
         uses: actions/upload-artifact@v4
