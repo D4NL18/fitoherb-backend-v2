@@ -12,6 +12,22 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
 
+    # Spin up a PostgreSQL service container for integration tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: runner
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: fitoherb_v2_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -26,7 +42,6 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v4
         # Passo de segurança crucial: verifica se o gradlew não foi adulterado
-        # prevenindo execução de scripts maliciosos injetados no wrapper do repositório.
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -37,5 +52,7 @@ jobs:
 
       - name: Run Unit Tests (Quality Gate)
         run: ./gradlew test --no-daemon
-        # Executa a suíte de testes. Se qualquer teste falhar, o exit code quebra a pipeline
-        # impedindo o merge do PR nas branches base.
+        env:
+          PostgresUsername: runner
+          PostgresPassword: password
+        # Executa a suíte de testes passando as credenciais do banco containerizado.
