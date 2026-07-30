@@ -5,7 +5,7 @@ on:
     branches:
       - develop
       - qa
-      - master
+      - main
 
 jobs:
   validate-and-test:
