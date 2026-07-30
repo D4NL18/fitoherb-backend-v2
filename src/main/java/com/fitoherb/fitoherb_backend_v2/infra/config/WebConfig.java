@@ -20,7 +20,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:4200", "https://fitoherb.web.app", "https://fitoherb.firebaseapp.com")
+                .allowedOrigins(
+                        "http://localhost:4200",
+                        "https://fitoherb.web.app",
+                        "https://fitoherb.firebaseapp.com",
+                        "https://fitoherb.com.br",
+                        "https://www.fitoherb.com.br",
+                        "https://fitoherb-frontend-prod-973619276831.us-central1.run.app",
+                        "https://fitoherb-frontend-qa-973619276831.us-central1.run.app",
+                        "https://qa.fitoherb.com.br"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH")
                 .allowedHeaders("*")
                 .allowCredentials(true);
