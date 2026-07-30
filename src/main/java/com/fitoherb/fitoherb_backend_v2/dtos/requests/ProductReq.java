@@ -22,7 +22,6 @@ public class ProductReq {
 
     @Schema(description = "Detailed description of the product and its benefits", example = "Flores de camomila desidratadas, ideais para infusões relaxantes antes de dormir.")
     @Size(min = MIN_STRING_LENGTH, max = MAX_TEXT_LENGTH, message = MSG_TEXT_SIZE)
-    @NotBlank(message = MSG_REQUIRED_FIELD)
     private String description;
 
     @Schema(description = "The unique SEO slug of the associated category", example = "chas-e-infusoes")
