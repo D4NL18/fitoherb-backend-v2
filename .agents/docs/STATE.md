@@ -1,22 +1,12 @@
-# Status Atual do Desenvolvimento (Context Window)
+# Current Workflow State: CORS Fix para QA
 
-Este documento é mantido exclusivamente pelo **Orquestrador**. Ele serve como uma memória persistente do estado exato onde a conversa e a funcionalidade se encontram, prevenindo que as diretrizes se percam em contextos (prompts) longos.
-
-## Tarefa Atual em Foco
-- **Feature/Entidade:** [Nenhuma ativa no momento]
-- **Branch Atual:** [Branch de desenvolvimento, ex: feature/P-001-nome]
-- **Etapa Atual do Fluxo:** [Ex: 1. Especificar, 6. Executar]
-- **Última Ação Realizada:** [Resumo da última etapa concluída]
-- **Próximo Passo Imediato:** [Qual agente deve ser chamado agora]
-
-## Progresso do Workflow (Checklist de Esteira 10-Steps)
-- [ ] 1. Especificar (Analista)
-- [ ] 2. Projetar (Arquiteto/Designer)
-- [ ] 3. Modelagem de Dados Segura (DBA)
-- [ ] 4. Planejar Tarefas (Arquiteto)
-- [ ] 5. Desenvolver Testes Unitários - TDD (Tester)
-- [ ] 6. Executar Código na Branch (Desenvolvedor)
-- [ ] 7. Code Review de Clean Code (Reviewer)
-- [ ] 8. Testar QA (Tester)
-- [ ] 9. Auditoria de Segurança (SecOps)
-- [ ] 10. Geração do Pull Request para Develop (DevOps)
+1. **Especificar (Specification)**: QA não está conseguindo acessar o back via frontend de QA por conta de erro de CORS (origin `https://qa.fitoherb.com.br` blocked).
+2. **Projetar (Design & Architecture)**: Adicionar `https://qa.fitoherb.com.br` às configurações de CORS em `SecurityConfigurations.java` e `WebConfig.java`.
+3. **Modelagem de Dados Segura (DBA)**: N/A.
+4. **Planejar as Tarefas (Task Planning)**: Ver checklist em `docs/tasks/cors_qa_fix.md`.
+5. **Desenvolver Testes Unitários (TDD)**: Como é uma mudança de configuração de ambiente e security config, os testes de integração ou MVC de CORS podem ser verificados (N/A testes unitários para a lista específica).
+6. **Executar (Execution)**: Adicionar a URL no código.
+7. **Code Review (Manutenibilidade)**: Código validado quanto a Clean Code.
+8. **Testar (Validation & QA)**: Validação manual / auditoria de build.
+9. **Auditoria de Segurança (SecOps)**: URLs em hardcoded whitelist (adequado). Sem origin '*'.
+10. **Release via Pull Request (DevOps)**: Gerar PR para `develop`.
