@@ -41,3 +41,6 @@ automation_scripts/
 
 # Uploaded images
 temp_images/
+
+# Ignore AI agents state
+.agents/docs/STATE.md
