@@ -39,4 +39,8 @@ public class ProductReq {
     @Schema(description = "Presentations available for that product", example = "[\"100g\", \"250g\", \"500g\"]")
     @Size(max = MAX_ARRAY_SIZE, message = MSG_ARRAY_SIZE)
     private List<String> presentation;
+
+    public void setDescription(String description) {
+        this.description = (description != null && description.trim().isEmpty()) ? null : description;
+    }
 }
