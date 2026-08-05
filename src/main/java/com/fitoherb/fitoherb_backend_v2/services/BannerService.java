@@ -62,6 +62,9 @@ public class BannerService {
 
         Banner banner = bannerMapper.reqToEntity(bannerReq);
         banner.setImagePath(fileName);
+
+        bannerRepository.shiftPositionsUp(banner.getPosition());
+
         return bannerRepository.save(banner);
     }
 
@@ -69,6 +72,9 @@ public class BannerService {
     public void updateBanner(BannerReq bannerReq, MultipartFile image, String id) {
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + id));
+
+        int oldPosition = banner.getPosition();
+        int newPosition = bannerReq.getPosition();
 
         if (image != null && !image.isEmpty()) {
             fileStorageService.deleteBannerImage(banner.getImagePath());
@@ -78,6 +84,13 @@ public class BannerService {
 
         try {
             bannerMapper.updateEntityFromReq(bannerReq, banner);
+
+            if (newPosition < oldPosition) {
+                bannerRepository.shiftPositionsUpForUpdate(newPosition, oldPosition);
+            } else if (newPosition > oldPosition) {
+                bannerRepository.shiftPositionsDownForUpdate(newPosition, oldPosition);
+            }
+
             bannerRepository.save(banner);
         } catch (Exception e) {
             throw new DatabaseOperationException("Failed to update banner in the database.", e);
@@ -89,8 +102,10 @@ public class BannerService {
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + id));
         try {
+            int deletedPosition = banner.getPosition();
             fileStorageService.deleteBannerImage(banner.getImagePath());
             bannerRepository.delete(banner);
+            bannerRepository.shiftPositionsDown(deletedPosition);
         } catch (Exception e) {
             throw new DatabaseOperationException("Failed to delete banner.", e);
         }
