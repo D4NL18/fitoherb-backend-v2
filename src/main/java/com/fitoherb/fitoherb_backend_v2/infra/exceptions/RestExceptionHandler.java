@@ -14,7 +14,6 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
@@ -24,31 +23,6 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class RestExceptionHandler {
-
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<RestValidationErrorMessage> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
-
-        Map<String, String> fieldErrors = new HashMap<>();
-
-        ex.getParameterValidationResults().forEach(result -> {
-            String paramName = result.getMethodParameter().getParameterName();
-            result.getResolvableErrors().forEach(error -> {
-                if (error instanceof org.springframework.validation.FieldError fieldError) {
-                    fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
-                } else {
-                    fieldErrors.put(paramName, error.getDefaultMessage());
-                }
-            });
-        });
-
-        RestValidationErrorMessage response = new RestValidationErrorMessage(
-                HttpStatus.BAD_REQUEST,
-                "Falha na validação de um ou mais campos",
-                fieldErrors
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RestValidationErrorMessage> handleValidationExceptions(MethodArgumentNotValidException ex) {
