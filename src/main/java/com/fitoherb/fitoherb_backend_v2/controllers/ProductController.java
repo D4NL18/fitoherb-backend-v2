@@ -150,7 +150,7 @@ public class ProductController {
     public ResponseEntity<Void> createProduct(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart(value = "product") @Valid ProductReq productReq,
-            @RequestPart(value = "image") @Valid @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
+            @RequestPart(value = "image") @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
     ) {
         Product savedProduct = productService.createProduct(productReq, image);
 
