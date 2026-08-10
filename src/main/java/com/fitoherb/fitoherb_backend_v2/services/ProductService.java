@@ -208,9 +208,17 @@ public class ProductService {
         }
         this.productRepository.saveAllAndFlush(products);
 
-        // Passo 2: Aplica a nova regra final
+        // Passo 2: Aplica a nova regra final com desempate
+        java.util.Set<String> usedSlugs = new java.util.HashSet<>();
         for (Product product : products) {
-            String newSlug = StringUtils.toSlug(product.getName() + " " + product.getSupplier().getName());
+            String baseSlug = StringUtils.toSlug(product.getName() + " " + product.getSupplier().getName());
+            String newSlug = baseSlug;
+            int counter = 1;
+            while (usedSlugs.contains(newSlug)) {
+                newSlug = baseSlug + "-" + counter;
+                counter++;
+            }
+            usedSlugs.add(newSlug);
             product.setSlug(newSlug);
         }
         this.productRepository.saveAllAndFlush(products);
