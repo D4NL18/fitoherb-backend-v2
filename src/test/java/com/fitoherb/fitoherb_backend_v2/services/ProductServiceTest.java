@@ -63,9 +63,14 @@ class ProductServiceTest {
 
         category = new ProductCategory();
         category.setSlug("categoria-teste");
+        category.setName("Categoria Teste");
 
         supplier = new Supplier();
         supplier.setSlug("fornecedor-teste");
+        supplier.setName("Fornecedor Teste");
+        
+        productEntity.setCategory(category);
+        productEntity.setSupplier(supplier);
     }
 
     @Nested
@@ -116,12 +121,11 @@ class ProductServiceTest {
             ProductReq req = new ProductReq();
             req.setName("Novo Produto");
             req.setCategorySlug("cat");
-            req.setSupplierSlug("sup");
+            req.setSupplierSlug("fornecedor-teste");
 
-            when(productRepository.findByName(anyString())).thenReturn(Optional.empty());
             when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
             when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
-            when(supplierRepository.findBySlug("sup")).thenReturn(Optional.of(supplier));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
             when(productMapper.reqToEntity(req)).thenReturn(productEntity);
             when(image.isEmpty()).thenReturn(false);
             when(fileStorageService.storeProductImage(image)).thenReturn("new-image.jpg");
@@ -135,12 +139,60 @@ class ProductServiceTest {
         }
 
         @Test
+        void shouldAllowSameProductNameForDifferentSuppliers() {
+            ProductReq req1 = new ProductReq();
+            req1.setName("Camomila");
+            req1.setCategorySlug("cat");
+            req1.setSupplierSlug("fornecedor-teste");
+
+            ProductReq req2 = new ProductReq();
+            req2.setName("Camomila");
+            req2.setCategorySlug("cat");
+            req2.setSupplierSlug("outro-fornecedor");
+
+            Supplier supplier2 = new Supplier();
+            supplier2.setSlug("outro-fornecedor");
+            supplier2.setName("Outro Fornecedor");
+
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+            when(supplierRepository.findBySlug("outro-fornecedor")).thenReturn(Optional.of(supplier2));
+
+            when(productRepository.findBySlug("camomila-fornecedor-teste")).thenReturn(Optional.empty());
+            when(productRepository.findBySlug("camomila-outro-fornecedor")).thenReturn(Optional.empty());
+
+            when(productMapper.reqToEntity(req1)).thenReturn(new Product());
+            when(productMapper.reqToEntity(req2)).thenReturn(new Product());
+
+            when(productRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            Product p1 = productService.createProduct(req1, null);
+            Product p2 = productService.createProduct(req2, null);
+
+            assertEquals("camomila-fornecedor-teste", p1.getSlug());
+            assertEquals("camomila-outro-fornecedor", p2.getSlug());
+        }
+
+        @Test
+        void shouldConflictWhenSameProductAndSupplier() {
+            ProductReq req = new ProductReq();
+            req.setName("Camomila");
+            req.setCategorySlug("cat");
+            req.setSupplierSlug("fornecedor-teste");
+
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+
+            when(productRepository.findBySlug("camomila-fornecedor-teste")).thenReturn(Optional.of(new Product()));
+
+            assertThrows(ResourceAlreadyExistsException.class, () -> productService.createProduct(req, null));
+        }
+
+        @Test
         void createProductCategoryNotFound() {
             ProductReq req = new ProductReq();
             req.setCategorySlug("invalid");
 
-            when(productRepository.findByName(any())).thenReturn(Optional.empty());
-            when(productRepository.findBySlug(any())).thenReturn(Optional.empty());
             when(categoryRepository.findBySlug("invalid")).thenReturn(Optional.empty());
 
             assertThrows(ResourceNotFoundException.class, () -> productService.createProduct(req, null));
@@ -155,9 +207,11 @@ class ProductServiceTest {
         void updateProductSuccessWithNewImage() {
             ProductReq req = new ProductReq();
             req.setName("Nome Atualizado");
+            req.setCategorySlug("categoria-teste");
+            req.setSupplierSlug("fornecedor-teste");
 
             when(productRepository.findBySlug("slug")).thenReturn(Optional.of(productEntity));
-            when(productRepository.findBySlug("nome-atualizado")).thenReturn(Optional.empty());
+            when(productRepository.findBySlug("nome-atualizado-fornecedor-teste")).thenReturn(Optional.empty());
             when(image.isEmpty()).thenReturn(false);
             when(fileStorageService.storeProductImage(image)).thenReturn("updated.jpg");
 
@@ -166,17 +220,21 @@ class ProductServiceTest {
             verify(fileStorageService).deleteProductImage("old-image.jpg");
             verify(fileStorageService).storeProductImage(image);
             verify(productRepository).save(productEntity);
+            assertEquals("nome-atualizado-fornecedor-teste", productEntity.getSlug());
         }
 
         @Test
         void updateProductSlugConflict() {
             ProductReq req = new ProductReq();
             req.setName("Produto Existente");
+            req.setCategorySlug("categoria-teste");
+            req.setSupplierSlug("fornecedor-teste");
+            
             Product otherProduct = new Product();
-            otherProduct.setSlug("produto-existente");
+            otherProduct.setSlug("produto-existente-fornecedor-teste");
 
             when(productRepository.findBySlug("original")).thenReturn(Optional.of(productEntity));
-            when(productRepository.findBySlug("produto-existente")).thenReturn(Optional.of(otherProduct));
+            when(productRepository.findBySlug("produto-existente-fornecedor-teste")).thenReturn(Optional.of(otherProduct));
 
             assertThrows(ResourceAlreadyExistsException.class, () ->
                     productService.updateProductBySlug(req, null, "original"));

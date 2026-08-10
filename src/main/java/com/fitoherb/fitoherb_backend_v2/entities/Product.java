@@ -26,7 +26,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false, unique = true)
@@ -68,9 +68,4 @@ public class Product {
     @Column(name = "updated_by")
     private String updatedBy;
 
-    @PrePersist
-    @PreUpdate
-    private void generateSlug() {
-        this.slug = StringUtils.toSlug(this.name);
-    }
 }
