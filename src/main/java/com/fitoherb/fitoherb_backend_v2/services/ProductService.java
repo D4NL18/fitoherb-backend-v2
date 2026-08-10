@@ -22,7 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ProductService {
@@ -198,5 +198,16 @@ public class ProductService {
         }
     }
 
+    @Transactional
+    public void migrateAllProductSlugs() {
+        List<Product> products = this.productRepository.findAll();
+        for (Product product : products) {
+            String newSlug = StringUtils.toSlug(product.getName() + " " + product.getSupplier().getName());
+            if (!newSlug.equals(product.getSlug())) {
+                product.setSlug(newSlug);
+                this.productRepository.save(product);
+            }
+        }
+    }
 
 }
