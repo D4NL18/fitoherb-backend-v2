@@ -22,7 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ProductService {
@@ -117,22 +117,18 @@ public class ProductService {
 
     @Transactional
     public Product createProduct(ProductReq productReq, MultipartFile image) {
-        if (this.productRepository.findByName(productReq.getName()).isPresent()) {
-            throw new ResourceAlreadyExistsException("Já existe um produto com esse nome");
-        }
-
-        String generatedSlug = StringUtils.toSlug(productReq.getName());
-        if (this.productRepository.findBySlug(generatedSlug).isPresent()) {
-            throw new ResourceAlreadyExistsException(
-                    "Já existe um produto com um nome similar (Conflito de slug: " + generatedSlug + ")"
-            );
-        }
-
         ProductCategory category = categoryRepository.findBySlug(productReq.getCategorySlug())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada com slug: " + productReq.getCategorySlug()));
 
         Supplier supplier = supplierRepository.findBySlug(productReq.getSupplierSlug())
                 .orElseThrow(() -> new ResourceNotFoundException("Fornecedor não encontrado com slug: " + productReq.getSupplierSlug()));
+
+        String generatedSlug = StringUtils.toSlug(productReq.getName() + " " + supplier.getName());
+        if (this.productRepository.findBySlug(generatedSlug).isPresent()) {
+            throw new ResourceAlreadyExistsException(
+                    "Já existe um produto com um nome similar (Conflito de slug: " + generatedSlug + ")"
+            );
+        }
 
         String fileName = null;
         if (image != null && !image.isEmpty()) {
@@ -153,7 +149,20 @@ public class ProductService {
         Product product = this.productRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND_MSG + slug));
 
-        String generatedSlug = StringUtils.toSlug(productReq.getName());
+        Supplier supplier = product.getSupplier();
+        if (!supplier.getSlug().equals(productReq.getSupplierSlug())) {
+             supplier = supplierRepository.findBySlug(productReq.getSupplierSlug())
+                 .orElseThrow(() -> new ResourceNotFoundException("Fornecedor não encontrado com slug: " + productReq.getSupplierSlug()));
+             product.setSupplier(supplier);
+        }
+
+        if (!product.getCategory().getSlug().equals(productReq.getCategorySlug())) {
+             ProductCategory category = categoryRepository.findBySlug(productReq.getCategorySlug())
+                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada com slug: " + productReq.getCategorySlug()));
+             product.setCategory(category);
+        }
+
+        String generatedSlug = StringUtils.toSlug(productReq.getName() + " " + supplier.getName());
 
         if (!product.getSlug().equals(generatedSlug) && this.productRepository.findBySlug(generatedSlug).isPresent()) {
             throw new ResourceAlreadyExistsException(
@@ -189,5 +198,16 @@ public class ProductService {
         }
     }
 
+    @Transactional
+    public void migrateAllProductSlugs() {
+        List<Product> products = this.productRepository.findAll();
+        for (Product product : products) {
+            String newSlug = StringUtils.toSlug(product.getName() + " " + product.getSupplier().getName());
+            if (!newSlug.equals(product.getSlug())) {
+                product.setSlug(newSlug);
+                this.productRepository.save(product);
+            }
+        }
+    }
 
 }
