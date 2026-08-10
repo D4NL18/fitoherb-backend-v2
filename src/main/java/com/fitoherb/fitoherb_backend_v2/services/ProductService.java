@@ -201,13 +201,19 @@ public class ProductService {
     @Transactional
     public void migrateAllProductSlugs() {
         List<Product> products = this.productRepository.findAll();
+        
+        // Passo 1: Libera os slugs atuais para evitar colisão Unique durante o loop
+        for (Product product : products) {
+            product.setSlug(java.util.UUID.randomUUID().toString());
+        }
+        this.productRepository.saveAllAndFlush(products);
+
+        // Passo 2: Aplica a nova regra final
         for (Product product : products) {
             String newSlug = StringUtils.toSlug(product.getName() + " " + product.getSupplier().getName());
-            if (!newSlug.equals(product.getSlug())) {
-                product.setSlug(newSlug);
-                this.productRepository.save(product);
-            }
+            product.setSlug(newSlug);
         }
+        this.productRepository.saveAllAndFlush(products);
     }
 
 }
