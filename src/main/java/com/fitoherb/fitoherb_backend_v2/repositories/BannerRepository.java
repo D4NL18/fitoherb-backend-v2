@@ -16,7 +16,7 @@ public interface BannerRepository extends JpaRepository<Banner, String> {
 
     List<Banner> findAllByIsActiveTrueOrderByPositionAsc();
 
-    @Query("SELECT b FROM banners b WHERE LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%'))")
+    @Query("SELECT b FROM banners b WHERE function('unaccent', LOWER(b.title)) LIKE function('unaccent', LOWER(CONCAT('%', :search, '%')))")
     Page<Banner> findAllFiltered(@Param("search") String search, Pageable pageable);
 
     @Modifying

@@ -62,7 +62,7 @@ public class ProductService {
 
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
-                predicates.add(cb.like(cb.lower(root.get("name")), searchPattern));
+                predicates.add(cb.like(cb.function("unaccent", String.class, cb.lower(root.get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern))));
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
@@ -96,9 +96,9 @@ public class ProductService {
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("name")), searchPattern),
-                        cb.like(cb.lower(root.get("category").get("name")), searchPattern),
-                        cb.like(cb.lower(root.get("supplier").get("name")), searchPattern)
+                        cb.like(cb.function("unaccent", String.class, cb.lower(root.get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern))),
+                        cb.like(cb.function("unaccent", String.class, cb.lower(root.get("category").get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern))),
+                        cb.like(cb.function("unaccent", String.class, cb.lower(root.get("supplier").get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern)))
                 ));
             }
 

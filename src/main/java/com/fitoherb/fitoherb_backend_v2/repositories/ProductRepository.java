@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
     Optional<Product> findByName(String name);
 
     @Query("SELECT p FROM products p WHERE " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+            "function('unaccent', LOWER(p.name)) LIKE function('unaccent', LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<Product> findAllFiltered(String searchTerm, Pageable pageable);
 
     List<Product> findBySupplierId(String supplierId);
