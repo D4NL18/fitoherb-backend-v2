@@ -38,6 +38,12 @@ public class ProductService {
     private final FileStorageService fileStorageService;
 
     private static final String PRODUCT_NOT_FOUND_MSG = "Produto não encontrado com slug: ";
+    private static final String ACCENTED_CHARS = "áàâãäéèêëíìîïóòôõöúùûüçñ";
+    private static final String UNACCENTED_CHARS = "aaaaaeeeeiiiiooooouuuucn";
+
+    private jakarta.persistence.criteria.Expression<String> getTranslateExpr(jakarta.persistence.criteria.CriteriaBuilder cb, jakarta.persistence.criteria.Expression<String> expression) {
+        return cb.function("translate", String.class, expression, cb.literal(ACCENTED_CHARS), cb.literal(UNACCENTED_CHARS));
+    }
 
     public Page<ProductRes> getAllProductsPaginated(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -63,8 +69,8 @@ public class ProductService {
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
                 predicates.add(cb.like(
-                        cb.function("translate", String.class, cb.lower(root.get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
-                        cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                        getTranslateExpr(cb, cb.lower(root.get("name"))),
+                        getTranslateExpr(cb, cb.literal(searchPattern))
                 ));
             }
 
@@ -100,16 +106,16 @@ public class ProductService {
                 String searchPattern = "%" + search.toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(
-                                cb.function("translate", String.class, cb.lower(root.get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
-                                cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                                getTranslateExpr(cb, cb.lower(root.get("name"))),
+                                getTranslateExpr(cb, cb.literal(searchPattern))
                         ),
                         cb.like(
-                                cb.function("translate", String.class, cb.lower(root.get("category").get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
-                                cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                                getTranslateExpr(cb, cb.lower(root.get("category").get("name"))),
+                                getTranslateExpr(cb, cb.literal(searchPattern))
                         ),
                         cb.like(
-                                cb.function("translate", String.class, cb.lower(root.get("supplier").get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
-                                cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                                getTranslateExpr(cb, cb.lower(root.get("supplier").get("name"))),
+                                getTranslateExpr(cb, cb.literal(searchPattern))
                         )
                 ));
             }
