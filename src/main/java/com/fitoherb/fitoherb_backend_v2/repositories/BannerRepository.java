@@ -16,7 +16,7 @@ public interface BannerRepository extends JpaRepository<Banner, String> {
 
     List<Banner> findAllByIsActiveTrueOrderByPositionAsc();
 
-    @Query("SELECT b FROM banners b WHERE cast(function('unaccent', LOWER(b.title)) as String) LIKE cast(function('unaccent', LOWER(CONCAT('%', :search, '%'))) as String)")
+    @Query("SELECT b FROM banners b WHERE cast(function('translate', LOWER(b.title), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String) LIKE cast(function('translate', LOWER(CONCAT('%', :search, '%')), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String)")
     Page<Banner> findAllFiltered(@Param("search") String search, Pageable pageable);
 
     @Modifying

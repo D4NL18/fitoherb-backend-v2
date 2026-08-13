@@ -62,7 +62,10 @@ public class ProductService {
 
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
-                predicates.add(cb.like(cb.function("unaccent", String.class, cb.lower(root.get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern))));
+                predicates.add(cb.like(
+                        cb.function("translate", String.class, cb.lower(root.get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
+                        cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                ));
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
@@ -96,9 +99,18 @@ public class ProductService {
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.function("unaccent", String.class, cb.lower(root.get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern))),
-                        cb.like(cb.function("unaccent", String.class, cb.lower(root.get("category").get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern))),
-                        cb.like(cb.function("unaccent", String.class, cb.lower(root.get("supplier").get("name"))), cb.function("unaccent", String.class, cb.literal(searchPattern)))
+                        cb.like(
+                                cb.function("translate", String.class, cb.lower(root.get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
+                                cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                        ),
+                        cb.like(
+                                cb.function("translate", String.class, cb.lower(root.get("category").get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
+                                cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                        ),
+                        cb.like(
+                                cb.function("translate", String.class, cb.lower(root.get("supplier").get("name")), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn")),
+                                cb.function("translate", String.class, cb.literal(searchPattern), cb.literal("áàâãäéèêëíìîïóòôõöúùûüçñ"), cb.literal("aaaaaeeeeiiiiooooouuuucn"))
+                        )
                 ));
             }
 

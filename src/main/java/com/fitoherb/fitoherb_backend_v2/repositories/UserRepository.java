@@ -13,7 +13,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     Optional<User> findByEmail(String email);
 
     @Query("SELECT u FROM users u WHERE " +
-            "cast(function('unaccent', LOWER(u.name)) as String) LIKE cast(function('unaccent', LOWER(CONCAT('%', :search, '%'))) as String) OR " +
-            "cast(function('unaccent', LOWER(u.email)) as String) LIKE cast(function('unaccent', LOWER(CONCAT('%', :search, '%'))) as String)")
+            "cast(function('translate', LOWER(u.name), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String) LIKE cast(function('translate', LOWER(CONCAT('%', :search, '%')), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String) OR " +
+            "cast(function('translate', LOWER(u.email), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String) LIKE cast(function('translate', LOWER(CONCAT('%', :search, '%')), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String)")
     Page<User> findAllFiltered(@Param("search") String search, Pageable pageable);
 }

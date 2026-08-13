@@ -16,7 +16,7 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
     Optional<ProductCategory> findByName(String name);
 
     @Query("SELECT pc FROM product_categories pc WHERE " +
-            "cast(function('unaccent', LOWER(pc.name)) as String) LIKE cast(function('unaccent', LOWER(CONCAT('%', :search, '%'))) as String)"
+            "cast(function('translate', LOWER(pc.name), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String) LIKE cast(function('translate', LOWER(CONCAT('%', :search, '%')), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn') as String)"
     )
     Page<ProductCategory> findAllFiltered(@Param("search") String search, Pageable pageable);
 
