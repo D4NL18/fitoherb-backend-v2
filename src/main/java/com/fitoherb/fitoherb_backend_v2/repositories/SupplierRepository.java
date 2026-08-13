@@ -17,7 +17,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, String> {
     Optional<Supplier> findByName(String name);
 
     @Query("SELECT s FROM suppliers s WHERE " +
-            "function('unaccent', LOWER(s.name)) LIKE function('unaccent', LOWER(CONCAT('%', :searchTerm, '%')))")
+            "cast(function('unaccent', LOWER(s.name)) as String) LIKE cast(function('unaccent', LOWER(CONCAT('%', :searchTerm, '%'))) as String)")
     Page<Supplier> findAllFiltered(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     @Query("SELECT COUNT(p) FROM products p WHERE p.supplier.slug = :supplierSlug")
