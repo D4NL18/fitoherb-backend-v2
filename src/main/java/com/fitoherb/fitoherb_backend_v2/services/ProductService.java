@@ -38,6 +38,12 @@ public class ProductService {
     private final FileStorageService fileStorageService;
 
     private static final String PRODUCT_NOT_FOUND_MSG = "Produto não encontrado com slug: ";
+    private static final String ACCENTED_CHARS = "áàâãäéèêëíìîïóòôõöúùûüçñ";
+    private static final String UNACCENTED_CHARS = "aaaaaeeeeiiiiooooouuuucn";
+
+    private jakarta.persistence.criteria.Expression<String> getTranslateExpr(jakarta.persistence.criteria.CriteriaBuilder cb, jakarta.persistence.criteria.Expression<String> expression) {
+        return cb.function("translate", String.class, expression, cb.literal(ACCENTED_CHARS), cb.literal(UNACCENTED_CHARS));
+    }
 
     public Page<ProductRes> getAllProductsPaginated(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -62,7 +68,10 @@ public class ProductService {
 
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
-                predicates.add(cb.like(cb.lower(root.get("name")), searchPattern));
+                predicates.add(cb.like(
+                        getTranslateExpr(cb, cb.lower(root.get("name"))),
+                        getTranslateExpr(cb, cb.literal(searchPattern))
+                ));
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
@@ -96,9 +105,18 @@ public class ProductService {
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("name")), searchPattern),
-                        cb.like(cb.lower(root.get("category").get("name")), searchPattern),
-                        cb.like(cb.lower(root.get("supplier").get("name")), searchPattern)
+                        cb.like(
+                                getTranslateExpr(cb, cb.lower(root.get("name"))),
+                                getTranslateExpr(cb, cb.literal(searchPattern))
+                        ),
+                        cb.like(
+                                getTranslateExpr(cb, cb.lower(root.get("category").get("name"))),
+                                getTranslateExpr(cb, cb.literal(searchPattern))
+                        ),
+                        cb.like(
+                                getTranslateExpr(cb, cb.lower(root.get("supplier").get("name"))),
+                                getTranslateExpr(cb, cb.literal(searchPattern))
+                        )
                 ));
             }
 
