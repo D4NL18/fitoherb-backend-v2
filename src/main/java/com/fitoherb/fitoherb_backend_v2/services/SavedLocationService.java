@@ -20,12 +20,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class SavedLocationService {
+
+    private static final String NOT_FOUND_MSG = "Local salvo não encontrado: ";
+    private static final String ROLE_ADMIN_AUTHORITY = "ROLE_ADMIN";
 
     private final SavedLocationRepository savedLocationRepository;
     private final UserRepository userRepository;
@@ -46,7 +48,7 @@ public class SavedLocationService {
         List<SavedLocation> locations = savedLocationRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
         return locations.stream()
                 .map(savedLocationMapper::entityToRes)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Optional<SavedLocationRes> getMyBaseLocation() {
@@ -58,9 +60,9 @@ public class SavedLocationService {
     public SavedLocationRes getById(String id) {
         User user = getAuthenticatedUser();
         SavedLocation location = savedLocationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Local salvo não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + id));
 
-        boolean isAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(ROLE_ADMIN_AUTHORITY));
         if (!location.getUser().getId().equals(user.getId()) && !isAdmin) {
             throw new AccessDeniedException("Acesso negado a este local salvo");
         }
@@ -92,9 +94,9 @@ public class SavedLocationService {
     public SavedLocationRes update(String id, SavedLocationReq req) {
         User user = getAuthenticatedUser();
         SavedLocation location = savedLocationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Local salvo não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + id));
 
-        boolean isAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(ROLE_ADMIN_AUTHORITY));
         if (!location.getUser().getId().equals(user.getId()) && !isAdmin) {
             throw new AccessDeniedException("Acesso negado a este local salvo");
         }
@@ -117,9 +119,9 @@ public class SavedLocationService {
     public void delete(String id) {
         User user = getAuthenticatedUser();
         SavedLocation location = savedLocationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Local salvo não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_MSG + id));
 
-        boolean isAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(ROLE_ADMIN_AUTHORITY));
         if (!location.getUser().getId().equals(user.getId()) && !isAdmin) {
             throw new AccessDeniedException("Acesso negado a este local salvo");
         }

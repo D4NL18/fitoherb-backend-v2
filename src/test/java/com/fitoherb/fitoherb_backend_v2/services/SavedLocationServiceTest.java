@@ -130,9 +130,9 @@ class SavedLocationServiceTest {
 
         assertNotNull(result);
         verify(savedLocationRepository).unsetPreviousBaseLocations(
-                eq(sellerUser.getId()),
-                eq(SavedLocationType.FAVORITE),
-                eq(SavedLocationType.BASE)
+                sellerUser.getId(),
+                SavedLocationType.FAVORITE,
+                SavedLocationType.BASE
         );
         verify(savedLocationRepository).save(any(SavedLocation.class));
     }
