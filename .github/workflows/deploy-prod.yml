@@ -67,3 +67,5 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             mailSenderUsername=${{ secrets.MAIL_USERNAME }}
             mailSenderPassword=${{ secrets.MAIL_PASSWORD }}
+            FITOHERB_AI_URL=https://fitoherb-ai-nkrtrtj5hq-uc.a.run.app
+
