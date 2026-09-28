@@ -41,8 +41,6 @@ public class ScheduledRouteServiceTest {
     @Mock
     private ScheduledRouteMapper mapper;
     @Mock
-    private ObjectMapper objectMapper;
-    @Mock
     private SecurityContext securityContext;
     @Mock
     private Authentication authentication;
@@ -84,7 +82,6 @@ public class ScheduledRouteServiceTest {
             req.setStops(List.of(Map.of("lat", 1, "lng", 1)));
 
             when(repo.findByUserIdAndRouteDate(mockUser.getId(), req.getRouteDate())).thenReturn(Optional.empty());
-            when(objectMapper.writeValueAsString(any())).thenReturn("{}");
             
             ScheduledRoute savedEntity = new ScheduledRoute();
             savedEntity.setId("route-1");

@@ -12,7 +12,7 @@ O sistema DEVE permitir que usuários com perfil SELLER ou ADMIN salvem rotas ot
 O sistema DEVE permitir agendar rotas para qualquer data entre HOJE e HOJE + 30 dias (inclusive). Se hoje é 28/09/2026, as datas válidas vão de 28/09/2026 até 28/10/2026. Tentativas de agendar fora dessa janela devem retornar HTTP 422 com mensagem "Data fora da janela de agendamento permitida (hoje até 30 dias à frente).".
 
 **P-202 - Janela de Visualização de Histórico de 7 Dias:**
-O sistema DEVE permitir visualizar rotas salvas de até 7 dias no passado a partir de HOJE. Se hoje é 10/09, o usuário pode ver rotas do dia 03/09 em diante. Rotas anteriores ao limite de 7 dias não devem ser retornadas ao frontend.
+O sistema DEVE permitir visualizar rotas salvas de até 7 dias no passado a partir de HOJE. Se hoje é 10/09, o usuário pode ver rotas do dia 03/09 em diante. Rotas anteriores ao limite de 7 dias não devem ser retornadas ao frontend. Na interface do calendário, dias anteriores à data atual só devem estar habilitados e acessíveis para clique/visualização caso possuam rotas salvas para aquele dia; dias passados sem rota devem permanecer desabilitados (inativos/cinza).
 
 **P-203 - Limpeza Automática de Rotas Expiradas:**
 O sistema DEVE executar diariamente (via `@Scheduled` cron) um job de limpeza que deleta permanentemente do banco de dados todas as rotas com `route_date` anterior a (HOJE - 7 dias). O job deve logar a quantidade de registros removidos sem expor dados pessoais.

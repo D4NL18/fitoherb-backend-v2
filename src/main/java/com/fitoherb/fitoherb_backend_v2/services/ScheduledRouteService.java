@@ -34,7 +34,8 @@ public class ScheduledRouteService {
     private final ScheduledRouteRepository repo;
     private final UserRepository userRepository;
     private final ScheduledRouteMapper mapper;
-    private final ObjectMapper objectMapper;
+    
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final int HISTORY_DAYS = 7;
     private static final int FUTURE_DAYS = 30;
