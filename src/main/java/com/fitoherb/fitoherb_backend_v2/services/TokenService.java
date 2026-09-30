@@ -22,11 +22,19 @@ public class TokenService {
     public String generateToken(User user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-            return JWT.create()
+            var builder = JWT.create()
                     .withIssuer("auth-api")
                     .withSubject(user.getEmail())
-                    .withExpiresAt(genExpirationDate())
-                    .sign(algorithm);
+                    .withExpiresAt(genExpirationDate());
+
+            if (user.getRole() != null) {
+                builder.withClaim("role", user.getRole().name());
+            }
+            if (user.getName() != null) {
+                builder.withClaim("name", user.getName());
+            }
+
+            return builder.sign(algorithm);
         } catch (JWTVerificationException e) {
             throw new InvalidTokenException("Erro ao gerar token JWT");
         }

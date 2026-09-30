@@ -69,13 +69,19 @@ public class User implements UserDetails {
 
 
     private static final String ROLE_USER = "ROLE_USER";
+    private static final String ROLE_SELLER = "ROLE_SELLER";
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.role == UserRole.ADMIN) {
-            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority(ROLE_USER));
+            return List.of(
+                    new SimpleGrantedAuthority(ROLE_ADMIN),
+                    new SimpleGrantedAuthority(ROLE_USER),
+                    new SimpleGrantedAuthority(ROLE_SELLER)
+            );
         } else if (this.role == UserRole.SELLER) {
-            return List.of(new SimpleGrantedAuthority("ROLE_SELLER"), new SimpleGrantedAuthority(ROLE_USER));
+            return List.of(new SimpleGrantedAuthority(ROLE_SELLER));
         } else {
             return List.of(new SimpleGrantedAuthority(ROLE_USER));
         }

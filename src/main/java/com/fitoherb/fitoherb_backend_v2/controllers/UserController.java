@@ -59,7 +59,7 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Unauthorized", value = "{\"status\": \"UNAUTHORIZED\", \"message\": \"Token JWT invalid or expired\"}")))
     })
-    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @PreAuthorize("@authorizationService.isAdmin()")
     @GetMapping
     public ResponseEntity<Page<UserRes>> getAllUsersPaginated(
             @Parameter(description = "Search term to filter users by name or email", example = "Daniel")
