@@ -69,8 +69,24 @@ public class AuthorizationService implements UserDetailsService {
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_SELLER"));
     }
 
+    public boolean isUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER"));
+    }
+
     public boolean isAdminOrSeller() {
         return isAdmin() || isSeller();
+    }
+
+    public boolean isAdminOrUser() {
+        return isAdmin() || isUser();
     }
 
     public String refreshToken(String expiredToken) {
