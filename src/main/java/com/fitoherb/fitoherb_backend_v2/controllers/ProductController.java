@@ -54,7 +54,7 @@ public class ProductController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Forbidden", value = "{\"status\": \"FORBIDDEN\", \"message\": \"Access denied: You do not have the necessary permissions to access this resource.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @PreAuthorize("@authorizationService.isAdminOrUser()")
     @GetMapping("/{slug}")
     public ResponseEntity<ProductRes> getProductBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
@@ -70,7 +70,7 @@ public class ProductController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Unauthorized", value = "{\"status\": \"UNAUTHORIZED\", \"message\": \"Token JWT invalid or expired\"}")))
     })
-    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @PreAuthorize("@authorizationService.isAdminOrUser()")
     @GetMapping
     public ResponseEntity<Page<ProductRes>> getAllProductsPaginated(
             @Parameter(description = "Global search term for product name", example = "Eucalyptus")
@@ -145,7 +145,7 @@ public class ProductController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Related Resource Not Found", value = "{\"status\": \"NOT_FOUND\", \"message\": \"Category not found with slug: organic-teas\"}")))
     })
-    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @PreAuthorize("@authorizationService.isAdminOrUser()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createProduct(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -176,7 +176,7 @@ public class ProductController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to update product in database.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @PreAuthorize("@authorizationService.isAdminOrUser()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateProductBySlug(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
@@ -198,7 +198,7 @@ public class ProductController {
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Integrity Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to delete product. Ensure there are no records linked to this account.\"}")))
     })
-    @PreAuthorize("@authorizationService.isAuthenticated()")
+    @PreAuthorize("@authorizationService.isAdminOrUser()")
     @DeleteMapping("/{slug}")
     public ResponseEntity<Void> deleteProductBySlug(
             @PathVariable @Valid @NotBlank(message = MSG_REQUIRED_FIELD) @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
