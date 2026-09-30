@@ -51,3 +51,15 @@ O sistema opera com três papéis de usuário distintos: `ADMIN`, `USER` e `SELL
 1. **Claims no Token JWT:** O backend deve emitir o token JWT contendo obrigatoriamente as claims `sub` (e-mail), `role` (papel) e `name` (nome).
 2. **Decodificação Síncrona na Inicialização:** O frontend deve decodificar o token JWT e armazenar o papel e e-mail imediatamente na sessão, evitando que o painel administrativo inicie com estado de papel nulo (`null`), o que geraria bloqueios indevidos com cadeados na interface.
 3. **Consistência Cross-Origin:** O `TokenService` deve persistir e recuperar cookies de sessão no próprio domínio do cliente com `SameSite=Strict`, garantindo leitura imediata mesmo em ambientes com APIs desacopladas.
+
+---
+
+## [P-109] Preservação de Ordinal e Integridade de Banco de Dados (Enum UserRole)
+1. **Ordem de Declaração Canônica:**
+   - `ADMIN` = 0
+   - `USER` = 1
+   - `SELLER` = 2
+   - A posição ordinal `1` pertence historicamente ao papel `USER`. O papel `SELLER` deve ocupar a posição `2` para manter a integridade dos registros preexistentes em banco de dados e evitar que usuários legados sejam lidos incorretamente como vendedores.
+2. **Atualização Automática de Check Constraints:**
+   - O componente `DatabaseConstraintInitializer` garante na inicialização da aplicação que a constraint `users_role_check` aceite todos os valores ordinais válidos (`CHECK (role >= 0 AND role <= 2)`), prevenindo conflitos `409 DataIntegrityViolationException` em migrações e atualizações de papéis entre ambientes.
+
