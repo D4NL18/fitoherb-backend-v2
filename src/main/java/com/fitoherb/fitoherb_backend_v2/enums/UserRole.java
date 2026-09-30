@@ -4,9 +4,9 @@ public enum UserRole {
 
     ADMIN("admin"),
 
-    SELLER("seller"),
+    USER("user"),
 
-    USER("user");
+    SELLER("seller");
 
     private final String role;
 
