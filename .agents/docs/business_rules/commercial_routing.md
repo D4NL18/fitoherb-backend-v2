@@ -80,3 +80,24 @@ Este documento define as regras de negócio normativas que regem o microserviço
      - Destacar o card da parada com borda e fundo avermelhados e pílula pulsante contendo a mensagem explicativa e o atraso em minutos (ex: *"Previsão de chegada às 14:10 (10 min após o horário marcado de 14:00)"*).
      - Quando o itinerário conseguir cumprir o horário marcado com sucesso, exibir uma pílula verde de confirmação (*"Marcado: 14:00 (No Horário)"*).
 
+---
+
+## [P-107] Busca Inteligente com Correspondência Fonética PT-BR e Priorização por Proximidade
+1. **Correspondência Fonética e Tolerância a Variações Ortográficas:**
+   - A busca por endereços e locais salvos não deve exigir correspondência textual exata.
+   - O sistema deve reconhecer alternâncias fonéticas e ortográficas frequentes no Português Brasileiro (PT-BR), tais como:
+     - Nasais e ditongos: `ã` <-> `an` <-> `am` <-> `ua` <-> `oa` (ex: `itapuã` deve localizar `itapoan`, `itapua`, `itapuan` e vice-versa).
+     - Sibilantes e consoantes equivalentes: `ç` <-> `ss` <-> `s` <-> `z` <-> `c` (ex: `pituaçu` <-> `pituassu`, `drogasil` <-> `drogazil`, `luis` <-> `luiz`).
+     - Grafias históricas e mudas: `ph` <-> `f`, `y` <-> `i`, `w` <-> `v`, remoção de `h` mudo inicial.
+2. **Priorização por Proximidade Geográfica:**
+   - Os resultados da busca (tanto na geocodificação quanto na filtragem de favoritos salvos) devem ser ordenados primariamente pela proximidade à base cadastrada do vendedor (ou da matriz Fitoherb, em caso de ausência de base cadastrada).
+3. **Resiliência de Geocodificação:**
+   - O serviço de geocodificação externa utiliza o Photon com fallback para o Nominatim, aplicando expansão de queries fonéticas sem parâmetros incompatíveis de idioma (`&lang=pt`).
+
+---
+
+## [P-108] Salvamento Automático da Rota e Modal de Configuração de Exportação em PDF
+1. **Salvamento Automático Silencioso (Auto-Save):**
+   - Ao otimizar ou recalcular um itinerário com sucesso, a rota do dia selecionado deve ser persistida automaticamente em segundo plano via `scheduled-routes`, dispensando ação manual através de botões de salvar na interface.
+2. **Modal de Configuração na Exportação em PDF:**
+   - Ao acionar a exportação em PDF, um modal de confirmação deve ser exibido oferecendo ao usuário a opção de gerar o relatório **Com Mapa** (incluindo captura gráfica visual do traçado e paradas) ou **Sem Mapa** (focado no itinerário e tabela de visitas para economia de tinta e rapidez de impressão).
