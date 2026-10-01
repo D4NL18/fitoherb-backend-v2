@@ -91,6 +91,29 @@ class AuthorizationServiceTest {
         }
 
         @Test
+        void registerSuccessEvenWhenMailFails() {
+            RegisterReq req = new RegisterReq();
+            req.setEmail("test-nomail@fitoherb.com");
+            req.setName("Test No Mail User");
+
+            User userEntity = new User();
+            userEntity.setEmail(req.getEmail());
+
+            when(userRepository.findByEmail(req.getEmail())).thenReturn(Optional.empty());
+            when(authMapper.registerReqToEntity(req)).thenReturn(userEntity);
+            when(passwordEncoder.encode(anyString())).thenReturn("hashed_pwd");
+            when(userRepository.save(any(User.class))).thenReturn(userEntity);
+            doThrow(new RuntimeException("SMTP connection error")).when(mailService).sendEmail(any());
+
+            User result = authorizationService.register(req);
+
+            assertNotNull(result);
+            verify(userRepository, times(1)).save(any(User.class));
+            verify(mailService, times(1)).sendEmail(any());
+            assertEquals("hashed_pwd", userEntity.getPassword());
+        }
+
+        @Test
         void registerEmailExists() {
             RegisterReq req = new RegisterReq();
             req.setEmail("exists@fitoherb.com");

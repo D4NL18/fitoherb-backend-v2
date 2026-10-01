@@ -23,5 +23,12 @@ public class DatabaseConstraintInitializer implements ApplicationRunner {
         } catch (Exception e) {
             log.warn("Não foi possível atualizar a restrição users_role_check: {}", e.getMessage());
         }
+
+        try {
+            jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN birth_date DROP NOT NULL");
+            log.info("Coluna legada 'birth_date' ajustada para nullable na tabela users.");
+        } catch (Exception e) {
+            log.debug("Coluna 'birth_date' não existe ou já é nullable: {}", e.getMessage());
+        }
     }
 }

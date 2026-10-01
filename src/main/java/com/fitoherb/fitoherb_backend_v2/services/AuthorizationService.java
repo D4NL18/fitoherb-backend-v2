@@ -125,16 +125,23 @@ public class AuthorizationService implements UserDetailsService {
         User newUser = authMapper.registerReqToEntity(registerReq);
         newUser.setPassword(encryptedPassword);
 
+        User savedUser;
         try {
-            User savedUser = userRepository.save(newUser);
-            sendWelcomeEmail(savedUser.getEmail(), savedUser.getName(), rawPassword);
-            log.info("User registered successfully: {}", savedUser.getEmail());
-
-            return savedUser;
+            savedUser = userRepository.save(newUser);
         } catch (Exception e) {
             log.error("Failed to register user {}: ", registerReq.getEmail(), e);
             throw new DatabaseOperationException("Falha ao registrar usuário. O sistema não conseguiu salvar a conta.", e);
         }
+
+        try {
+            sendWelcomeEmail(savedUser.getEmail(), savedUser.getName(), rawPassword);
+            log.info("Welcome email sent to user: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.warn("User {} registered successfully, but failed to send welcome email: {}", savedUser.getEmail(), e.getMessage());
+        }
+
+        log.info("User registered successfully: {}", savedUser.getEmail());
+        return savedUser;
     }
 
     private String generateSecurePassword() {
