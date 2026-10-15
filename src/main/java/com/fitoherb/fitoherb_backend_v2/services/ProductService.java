@@ -77,68 +77,7 @@ public class ProductService {
     public Page<ProductRes> getAllProductsPaginated(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, 10);
-
-        Specification<Product> spec = (root, query, cb) -> {
-            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
-
-            if (categories != null && !categories.isEmpty()) {
-                java.util.List<String> validCategories = categories.stream().filter(c -> c != null && !c.isBlank()).toList();
-                if (!validCategories.isEmpty()) {
-                    predicates.add(root.get("category").get("slug").in(validCategories));
-                }
-            }
-
-            if (suppliers != null && !suppliers.isEmpty()) {
-                java.util.List<String> validSuppliers = suppliers.stream().filter(s -> s != null && !s.isBlank()).toList();
-                if (!validSuppliers.isEmpty()) {
-                    predicates.add(root.get("supplier").get("slug").in(validSuppliers));
-                }
-            }
-
-            if (search != null && !search.isBlank()) {
-                java.util.List<String> tokens = extractMeaningfulTokens(search);
-                for (String token : tokens) {
-                    if (token.isBlank()) continue;
-                    String cleanToken = token.replace("%", "").trim();
-                    if (cleanToken.isBlank()) cleanToken = token.trim();
-                    String pattern = "%" + cleanToken.toLowerCase() + "%";
-                    predicates.add(cb.or(
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(root.get("name"))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            ),
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(cb.coalesce(root.get("description"), ""))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            ),
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(cb.function("array_to_string", String.class, root.get("flavours"), cb.literal(" ")))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            )
-                    ));
-
-                }
-
-                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
-                    String meaningfulPhrase = String.join(" ", tokens);
-                    String exactPattern = "%" + meaningfulPhrase.trim().toLowerCase() + "%";
-                    jakarta.persistence.criteria.Expression<Integer> priorityCase = cb.<Integer>selectCase()
-                            .when(cb.like(getTranslateExpr(cb, cb.lower(root.get("name"))), getTranslateExpr(cb, cb.literal(exactPattern))), 0)
-                            .otherwise(1);
-
-                    jakarta.persistence.criteria.Order priorityOrder = cb.asc(priorityCase);
-                    jakarta.persistence.criteria.Order fieldOrder = sortDirection.isAscending() ? cb.asc(root.get(sortField)) : cb.desc(root.get(sortField));
-                    query.orderBy(priorityOrder, fieldOrder);
-                }
-            } else {
-                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
-                    jakarta.persistence.criteria.Order fieldOrder = sortDirection.isAscending() ? cb.asc(root.get(sortField)) : cb.desc(root.get(sortField));
-                    query.orderBy(fieldOrder);
-                }
-            }
-
-            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
-        };
+        Specification<Product> spec = buildProductSpecification(search, categories, suppliers, sortField, sortDirection, false);
 
         org.springframework.data.domain.Page<Product> productPage = productRepository.findAll(spec, pageable);
         return productPage.map(productMapper::entityToRes);
@@ -147,80 +86,111 @@ public class ProductService {
     public Page<ProductRes> getProductGallery(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, int size, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size);
+        Specification<Product> spec = buildProductSpecification(search, categories, suppliers, "name", sortDirection, true);
 
-        Specification<Product> spec = (root, query, cb) -> {
-            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+        return productRepository.findAll(spec, pageable)
+                .map(productMapper::entityToRes);
+    }
+
+    private Specification<Product> buildProductSpecification(
+            String search,
+            List<String> categories,
+            List<String> suppliers,
+            String sortField,
+            Sort.Direction sortDirection,
+            boolean includeCategoryAndSupplierSearch
+    ) {
+        return (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
 
             if (categories != null && !categories.isEmpty()) {
-                java.util.List<String> validCategories = categories.stream().filter(c -> c != null && !c.isBlank()).toList();
+                List<String> validCategories = categories.stream().filter(c -> c != null && !c.isBlank()).toList();
                 if (!validCategories.isEmpty()) {
                     predicates.add(root.get("category").get("slug").in(validCategories));
                 }
             }
 
             if (suppliers != null && !suppliers.isEmpty()) {
-                java.util.List<String> validSuppliers = suppliers.stream().filter(s -> s != null && !s.isBlank()).toList();
+                List<String> validSuppliers = suppliers.stream().filter(s -> s != null && !s.isBlank()).toList();
                 if (!validSuppliers.isEmpty()) {
                     predicates.add(root.get("supplier").get("slug").in(validSuppliers));
                 }
             }
 
             if (search != null && !search.isBlank()) {
-                java.util.List<String> tokens = extractMeaningfulTokens(search);
+                List<String> tokens = extractMeaningfulTokens(search);
                 for (String token : tokens) {
                     if (token.isBlank()) continue;
                     String cleanToken = token.replace("%", "").trim();
                     if (cleanToken.isBlank()) cleanToken = token.trim();
                     String pattern = "%" + cleanToken.toLowerCase() + "%";
-                    predicates.add(cb.or(
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(root.get("name"))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            ),
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(root.get("category").get("name"))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            ),
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(root.get("supplier").get("name"))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            ),
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(cb.coalesce(root.get("description"), ""))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            ),
-                            cb.like(
-                                    getTranslateExpr(cb, cb.lower(cb.function("array_to_string", String.class, root.get("flavours"), cb.literal(" ")))),
-                                    getTranslateExpr(cb, cb.literal(pattern))
-                            )
+
+                    List<jakarta.persistence.criteria.Predicate> orPredicates = new java.util.ArrayList<>();
+                    orPredicates.add(cb.like(
+                            getTranslateExpr(cb, cb.lower(root.get("name"))),
+                            getTranslateExpr(cb, cb.literal(pattern))
                     ));
 
+                    if (includeCategoryAndSupplierSearch) {
+                        orPredicates.add(cb.like(
+                                getTranslateExpr(cb, cb.lower(root.get("category").get("name"))),
+                                getTranslateExpr(cb, cb.literal(pattern))
+                        ));
+                        orPredicates.add(cb.like(
+                                getTranslateExpr(cb, cb.lower(root.get("supplier").get("name"))),
+                                getTranslateExpr(cb, cb.literal(pattern))
+                        ));
+                    }
+
+                    orPredicates.add(cb.like(
+                            getTranslateExpr(cb, cb.lower(cb.coalesce(root.get("description"), ""))),
+                            getTranslateExpr(cb, cb.literal(pattern))
+                    ));
+                    orPredicates.add(cb.like(
+                            getTranslateExpr(cb, cb.lower(cb.function("array_to_string", String.class, root.get("flavours"), cb.literal(" ")))),
+                            getTranslateExpr(cb, cb.literal(pattern))
+                    ));
+
+                    predicates.add(cb.or(orPredicates.toArray(new jakarta.persistence.criteria.Predicate[0])));
                 }
 
-                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
-                    String meaningfulPhrase = String.join(" ", tokens);
-                    String exactPattern = "%" + meaningfulPhrase.trim().toLowerCase() + "%";
-                    jakarta.persistence.criteria.Expression<Integer> priorityCase = cb.<Integer>selectCase()
-                            .when(cb.like(getTranslateExpr(cb, cb.lower(root.get("name"))), getTranslateExpr(cb, cb.literal(exactPattern))), 0)
-                            .otherwise(1);
-
-                    jakarta.persistence.criteria.Order priorityOrder = cb.asc(priorityCase);
-                    jakarta.persistence.criteria.Order nameOrder = sortDirection.isAscending() ? cb.asc(root.get("name")) : cb.desc(root.get("name"));
-                    query.orderBy(priorityOrder, nameOrder);
-                }
+                applyOrdering(query, cb, root, tokens, sortField, sortDirection);
             } else {
-                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
-                    jakarta.persistence.criteria.Order nameOrder = sortDirection.isAscending() ? cb.asc(root.get("name")) : cb.desc(root.get("name"));
-                    query.orderBy(nameOrder);
-                }
+                applyOrdering(query, cb, root, null, sortField, sortDirection);
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
-
         };
+    }
 
-        return productRepository.findAll(spec, pageable)
-                .map(productMapper::entityToRes);
+    private void applyOrdering(
+            jakarta.persistence.criteria.CriteriaQuery<?> query,
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            jakarta.persistence.criteria.Root<Product> root,
+            List<String> tokens,
+            String sortField,
+            Sort.Direction sortDirection
+    ) {
+        if (query == null || Long.class == query.getResultType() || long.class == query.getResultType()) {
+            return;
+        }
+
+        jakarta.persistence.criteria.Order fieldOrder = sortDirection.isAscending()
+                ? cb.asc(root.get(sortField))
+                : cb.desc(root.get(sortField));
+
+        if (tokens != null && !tokens.isEmpty()) {
+            String meaningfulPhrase = String.join(" ", tokens);
+            String exactPattern = "%" + meaningfulPhrase.trim().toLowerCase() + "%";
+            jakarta.persistence.criteria.Expression<Integer> priorityCase = cb.<Integer>selectCase()
+                    .when(cb.like(getTranslateExpr(cb, cb.lower(root.get("name"))), getTranslateExpr(cb, cb.literal(exactPattern))), 0)
+                    .otherwise(1);
+
+            jakarta.persistence.criteria.Order priorityOrder = cb.asc(priorityCase);
+            query.orderBy(priorityOrder, fieldOrder);
+        } else {
+            query.orderBy(fieldOrder);
+        }
     }
 
     public ProductRes getProductBySlug(String slug) {
