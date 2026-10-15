@@ -47,7 +47,7 @@ public class ProductService {
 
     public Page<ProductRes> getAllProductsPaginated(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, String sortField, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, 10, Sort.by(sortDirection, sortField));
+        Pageable pageable = PageRequest.of(page, 10);
 
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
@@ -78,6 +78,22 @@ public class ProductService {
                             getTranslateExpr(cb, cb.literal(pattern))
                     ));
                 }
+
+                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
+                    String exactPattern = "%" + search.trim().toLowerCase() + "%";
+                    jakarta.persistence.criteria.Expression<Integer> priorityCase = cb.<Integer>selectCase()
+                            .when(cb.like(getTranslateExpr(cb, cb.lower(root.get("name"))), getTranslateExpr(cb, cb.literal(exactPattern))), 0)
+                            .otherwise(1);
+
+                    jakarta.persistence.criteria.Order priorityOrder = cb.asc(priorityCase);
+                    jakarta.persistence.criteria.Order fieldOrder = sortDirection.isAscending() ? cb.asc(root.get(sortField)) : cb.desc(root.get(sortField));
+                    query.orderBy(priorityOrder, fieldOrder);
+                }
+            } else {
+                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
+                    jakarta.persistence.criteria.Order fieldOrder = sortDirection.isAscending() ? cb.asc(root.get(sortField)) : cb.desc(root.get(sortField));
+                    query.orderBy(fieldOrder);
+                }
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
@@ -89,7 +105,7 @@ public class ProductService {
 
     public Page<ProductRes> getProductGallery(String search, java.util.List<String> categories, java.util.List<String> suppliers, int page, int size, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "name"));
+        Pageable pageable = PageRequest.of(page, size);
 
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
@@ -130,9 +146,26 @@ public class ProductService {
                             )
                     ));
                 }
+
+                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
+                    String exactPattern = "%" + search.trim().toLowerCase() + "%";
+                    jakarta.persistence.criteria.Expression<Integer> priorityCase = cb.<Integer>selectCase()
+                            .when(cb.like(getTranslateExpr(cb, cb.lower(root.get("name"))), getTranslateExpr(cb, cb.literal(exactPattern))), 0)
+                            .otherwise(1);
+
+                    jakarta.persistence.criteria.Order priorityOrder = cb.asc(priorityCase);
+                    jakarta.persistence.criteria.Order nameOrder = sortDirection.isAscending() ? cb.asc(root.get("name")) : cb.desc(root.get("name"));
+                    query.orderBy(priorityOrder, nameOrder);
+                }
+            } else {
+                if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
+                    jakarta.persistence.criteria.Order nameOrder = sortDirection.isAscending() ? cb.asc(root.get("name")) : cb.desc(root.get("name"));
+                    query.orderBy(nameOrder);
+                }
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+
         };
 
         return productRepository.findAll(spec, pageable)
