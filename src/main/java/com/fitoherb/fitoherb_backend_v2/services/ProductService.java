@@ -73,10 +73,21 @@ public class ProductService {
                     String cleanToken = token.replace("%", "").trim();
                     if (cleanToken.isBlank()) cleanToken = token.trim();
                     String pattern = "%" + cleanToken.toLowerCase() + "%";
-                    predicates.add(cb.like(
-                            getTranslateExpr(cb, cb.lower(root.get("name"))),
-                            getTranslateExpr(cb, cb.literal(pattern))
+                    predicates.add(cb.or(
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(root.get("name"))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
+                            ),
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(cb.coalesce(root.get("description"), ""))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
+                            ),
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(cb.function("array_to_string", String.class, root.get("flavours"), cb.literal(" ")))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
+                            )
                     ));
+
                 }
 
                 if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
@@ -143,8 +154,17 @@ public class ProductService {
                             cb.like(
                                     getTranslateExpr(cb, cb.lower(root.get("supplier").get("name"))),
                                     getTranslateExpr(cb, cb.literal(pattern))
+                            ),
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(cb.coalesce(root.get("description"), ""))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
+                            ),
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(cb.function("array_to_string", String.class, root.get("flavours"), cb.literal(" ")))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
                             )
                     ));
+
                 }
 
                 if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
