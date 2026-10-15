@@ -41,6 +41,35 @@ public class ProductService {
     private static final String ACCENTED_CHARS = "áàâãäéèêëíìîïóòôõöúùûüçñ";
     private static final String UNACCENTED_CHARS = "aaaaaeeeeiiiiooooouuuucn";
 
+    private static final java.util.Set<String> STOP_WORDS = java.util.Set.of(
+            "quero", "queria", "gostaria", "ver", "lista", "listar", "opcoes", "opcao",
+            "opções", "opção", "tem", "têm", "temos", "mostrar", "mostra", "me",
+            "de", "do", "da", "dos", "das", "em", "no", "na", "nas",
+            "a", "o", "as", "os", "um", "uma", "uns", "umas",
+            "para", "pra", "pro", "pras", "pros", "por", "com", "sem",
+            "produtos", "produto", "marca", "marcas", "qual", "quais", "que", "onde", "acho"
+    );
+
+    private java.util.List<String> extractMeaningfulTokens(String search) {
+        if (search == null || search.isBlank()) return java.util.Collections.emptyList();
+        String[] rawTokens = search.trim().split("\\s+");
+        java.util.List<String> meaningful = new java.util.ArrayList<>();
+        for (String raw : rawTokens) {
+            String clean = raw.trim().toLowerCase();
+            String norm = clean.replaceAll("[^a-z0-9%]", "");
+            if (norm.isBlank()) continue;
+            if (!STOP_WORDS.contains(norm) && !STOP_WORDS.contains(clean)) {
+                meaningful.add(raw);
+            }
+        }
+        if (meaningful.isEmpty()) {
+            for (String raw : rawTokens) {
+                if (!raw.isBlank()) meaningful.add(raw);
+            }
+        }
+        return meaningful;
+    }
+
     private jakarta.persistence.criteria.Expression<String> getTranslateExpr(jakarta.persistence.criteria.CriteriaBuilder cb, jakarta.persistence.criteria.Expression<String> expression) {
         return cb.function("translate", String.class, expression, cb.literal(ACCENTED_CHARS), cb.literal(UNACCENTED_CHARS));
     }
@@ -67,7 +96,7 @@ public class ProductService {
             }
 
             if (search != null && !search.isBlank()) {
-                String[] tokens = search.trim().split("\\s+");
+                java.util.List<String> tokens = extractMeaningfulTokens(search);
                 for (String token : tokens) {
                     if (token.isBlank()) continue;
                     String cleanToken = token.replace("%", "").trim();
@@ -91,7 +120,8 @@ public class ProductService {
                 }
 
                 if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
-                    String exactPattern = "%" + search.trim().toLowerCase() + "%";
+                    String meaningfulPhrase = String.join(" ", tokens);
+                    String exactPattern = "%" + meaningfulPhrase.trim().toLowerCase() + "%";
                     jakarta.persistence.criteria.Expression<Integer> priorityCase = cb.<Integer>selectCase()
                             .when(cb.like(getTranslateExpr(cb, cb.lower(root.get("name"))), getTranslateExpr(cb, cb.literal(exactPattern))), 0)
                             .otherwise(1);
@@ -136,7 +166,7 @@ public class ProductService {
             }
 
             if (search != null && !search.isBlank()) {
-                String[] tokens = search.trim().split("\\s+");
+                java.util.List<String> tokens = extractMeaningfulTokens(search);
                 for (String token : tokens) {
                     if (token.isBlank()) continue;
                     String cleanToken = token.replace("%", "").trim();
@@ -168,7 +198,8 @@ public class ProductService {
                 }
 
                 if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
-                    String exactPattern = "%" + search.trim().toLowerCase() + "%";
+                    String meaningfulPhrase = String.join(" ", tokens);
+                    String exactPattern = "%" + meaningfulPhrase.trim().toLowerCase() + "%";
                     jakarta.persistence.criteria.Expression<Integer> priorityCase = cb.<Integer>selectCase()
                             .when(cb.like(getTranslateExpr(cb, cb.lower(root.get("name"))), getTranslateExpr(cb, cb.literal(exactPattern))), 0)
                             .otherwise(1);
