@@ -110,6 +110,31 @@ class ProductServiceTest {
             assertNotNull(result);
             verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
         }
+
+        @Test
+        @SuppressWarnings("unchecked")
+        void getAllProductsPaginatedWithoutSearchDescSuccess() {
+            Page<Product> page = new PageImpl<>(List.of(productEntity));
+            when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+            when(productMapper.entityToRes(any())).thenReturn(productRes);
+
+            Page<ProductRes> result = productService.getAllProductsPaginated(null, List.of("cat"), List.of("sup"), 0, "name", "DESC");
+
+            assertEquals(1, result.getTotalElements());
+            verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
+        }
+
+        @Test
+        @SuppressWarnings("unchecked")
+        void getProductGalleryWithoutSearchSuccess() {
+            Page<Product> page = new PageImpl<>(List.of(productEntity));
+            when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+
+            Page<ProductRes> result = productService.getProductGallery(null, null, null, 0, 10, "DESC");
+
+            assertNotNull(result);
+            verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
+        }
     }
 
     @Nested
