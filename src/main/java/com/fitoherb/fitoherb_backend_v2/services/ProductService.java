@@ -67,11 +67,17 @@ public class ProductService {
             }
 
             if (search != null && !search.isBlank()) {
-                String searchPattern = "%" + search.toLowerCase() + "%";
-                predicates.add(cb.like(
-                        getTranslateExpr(cb, cb.lower(root.get("name"))),
-                        getTranslateExpr(cb, cb.literal(searchPattern))
-                ));
+                String[] tokens = search.trim().split("\\s+");
+                for (String token : tokens) {
+                    if (token.isBlank()) continue;
+                    String cleanToken = token.replace("%", "").trim();
+                    if (cleanToken.isBlank()) cleanToken = token.trim();
+                    String pattern = "%" + cleanToken.toLowerCase() + "%";
+                    predicates.add(cb.like(
+                            getTranslateExpr(cb, cb.lower(root.get("name"))),
+                            getTranslateExpr(cb, cb.literal(pattern))
+                    ));
+                }
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
@@ -103,21 +109,27 @@ public class ProductService {
             }
 
             if (search != null && !search.isBlank()) {
-                String searchPattern = "%" + search.toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(
-                                getTranslateExpr(cb, cb.lower(root.get("name"))),
-                                getTranslateExpr(cb, cb.literal(searchPattern))
-                        ),
-                        cb.like(
-                                getTranslateExpr(cb, cb.lower(root.get("category").get("name"))),
-                                getTranslateExpr(cb, cb.literal(searchPattern))
-                        ),
-                        cb.like(
-                                getTranslateExpr(cb, cb.lower(root.get("supplier").get("name"))),
-                                getTranslateExpr(cb, cb.literal(searchPattern))
-                        )
-                ));
+                String[] tokens = search.trim().split("\\s+");
+                for (String token : tokens) {
+                    if (token.isBlank()) continue;
+                    String cleanToken = token.replace("%", "").trim();
+                    if (cleanToken.isBlank()) cleanToken = token.trim();
+                    String pattern = "%" + cleanToken.toLowerCase() + "%";
+                    predicates.add(cb.or(
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(root.get("name"))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
+                            ),
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(root.get("category").get("name"))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
+                            ),
+                            cb.like(
+                                    getTranslateExpr(cb, cb.lower(root.get("supplier").get("name"))),
+                                    getTranslateExpr(cb, cb.literal(pattern))
+                            )
+                    ));
+                }
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
