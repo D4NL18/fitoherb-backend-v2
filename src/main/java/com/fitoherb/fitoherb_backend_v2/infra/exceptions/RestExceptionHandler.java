@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -95,6 +96,12 @@ public class RestExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<RestErrorMessage> resourceNotFoundHandler(ResourceNotFoundException exception) {
         RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.NOT_FOUND, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<RestErrorMessage> noResourceFoundHandler(NoResourceFoundException exception) {
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.NOT_FOUND, "Recurso não encontrado: " + exception.getResourcePath());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
