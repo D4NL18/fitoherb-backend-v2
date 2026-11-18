@@ -44,3 +44,14 @@ temp_images/
 
 # Ignore AI agents state
 .agents/docs/STATE.md
+
+# Local environment secrets and database backups (Privacy Officer / P-400)
+.env
+.env.*
+!.env.example
+*.sql
+!src/main/resources/db/migration/*.sql
+!.agents/docs/db/seeds/*.sql
+*.dump
+*.bak
+fitoherb_backup.sql

@@ -1,6 +1,7 @@
 package com.fitoherb.fitoherb_backend_v2.entities;
 
-import com.fitoherb.fitoherb_backend_v2.utils.StringUtils;
+import com.fitoherb.fitoherb_backend_v2.enums.ErpMappingStatus;
+import com.fitoherb.fitoherb_backend_v2.enums.ProductCurationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
@@ -10,6 +11,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Table(name = "products")
@@ -43,6 +45,33 @@ public class Product {
 
     @Column(name = "presentation")
     private List<String> presentation;
+
+    @Column(name = "active", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT TRUE")
+    private Boolean active = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "curation_status", nullable = false, length = 20, columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'COMPLETE'")
+    private ProductCurationStatus curationStatus = ProductCurationStatus.COMPLETE;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<ProductSku> skus = new ArrayList<>();
+
+    @Transient
+    private ErpMappingStatus erpMappingStatus;
+
+    public ErpMappingStatus getErpMappingStatus() {
+        if (erpMappingStatus != null) {
+            return erpMappingStatus;
+        }
+        if (skus == null || skus.isEmpty() || skus.stream().anyMatch(s -> s.getErpCode() == null)) {
+            return ErpMappingStatus.UNMAPPED;
+        }
+        if (skus.stream().anyMatch(s -> Boolean.TRUE.equals(s.getErpInactive()))) {
+            return ErpMappingStatus.INACTIVE_ALERT;
+        }
+        return ErpMappingStatus.COMPLETE;
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)

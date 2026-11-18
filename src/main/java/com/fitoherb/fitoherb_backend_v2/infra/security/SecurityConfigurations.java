@@ -27,6 +27,7 @@ import java.util.List;
 public class SecurityConfigurations {
 
     private final SecurityFilter securityFilter;
+    private final SyncSchedulerAuthFilter syncSchedulerAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
@@ -38,8 +39,11 @@ public class SecurityConfigurations {
                     .authorizeHttpRequests(authorize -> authorize
                             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                             .requestMatchers("/favicon.ico", "/error").permitAll()
+                            .requestMatchers("/products/gallery").permitAll()
+                            .requestMatchers("/erp-products/**").authenticated()
                             .anyRequest().permitAll()
                     )
+                    .addFilterBefore(syncSchedulerAuthFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                     .build();
         } catch (Exception e) {
@@ -51,7 +55,9 @@ public class SecurityConfigurations {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
+                "http://localhost:4100",
                 "http://localhost:4200",
+                "http://localhost:4201",
                 "https://fitoherb.web.app",
                 "https://fitoherb.firebaseapp.com",
                 "https://fitoherb.com.br",

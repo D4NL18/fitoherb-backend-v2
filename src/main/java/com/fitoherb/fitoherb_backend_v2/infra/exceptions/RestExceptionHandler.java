@@ -71,8 +71,41 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<RestErrorMessage> handleResourceAlreadyExists(ResourceAlreadyExistsException exception) {
-        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, exception.getMessage());
+        RestErrorMessage errorResponse = new RestErrorMessage(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                exception.getCode(),
+                exception.getDetails()
+        );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    @ExceptionHandler(UnprocessableEntityException.class)
+    public ResponseEntity<RestErrorMessage> handleUnprocessableEntity(UnprocessableEntityException exception) {
+        RestErrorMessage errorResponse = new RestErrorMessage(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                exception.getMessage(),
+                exception.getCode(),
+                exception.getDetails()
+        );
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorResponse);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<RestErrorMessage> handleServiceUnavailable(ServiceUnavailableException exception) {
+        RestErrorMessage errorResponse = new RestErrorMessage(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(),
+                exception.getCode(),
+                exception.getDetails()
+        );
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<RestErrorMessage> handleIllegalArgument(IllegalArgumentException exception) {
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.BAD_REQUEST, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -140,6 +173,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(InvalidDataAccessApiUsageException.class)
     public ResponseEntity<RestErrorMessage> handleInvalidDataAccess(InvalidDataAccessApiUsageException ex) {
+        log.warn("InvalidDataAccessApiUsageException: {}", ex.getMessage(), ex);
         String message = "Requisição inválida: verifique se o campo de ordenação ou os parâmetros de consulta estão corretos.";
         String rawMessage = ex.getMessage();
 
@@ -165,8 +199,16 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<RestErrorMessage> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String raw = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
         String message = "Violação de integridade de dados. O recurso já está sendo utilizado ou existe um conflito de dados.";
-        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, message);
+        String code = null;
+        if (raw != null && raw.contains("uk_product_skus_erp_code")) {
+            message = "O código ERP informado já está vinculado a outro produto.";
+            code = "ERP_CODE_ALREADY_MAPPED";
+        } else if (raw != null && raw.contains("uk_products_slug")) {
+            message = "Já existe um produto cadastrado com um nome/slug equivalente.";
+        }
+        RestErrorMessage errorResponse = new RestErrorMessage(HttpStatus.CONFLICT, message, code, null);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
