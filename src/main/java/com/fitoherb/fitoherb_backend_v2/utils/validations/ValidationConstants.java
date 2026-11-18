@@ -15,6 +15,8 @@ public class ValidationConstants {
     public static final int MIN_STRING_LENGTH = 3;
     public static final int MIN_PASSWORD_LENGTH = 8;
     public static final int MAX_ARRAY_SIZE = 20;
+    public static final int MAX_SKUS_PER_PRODUCT = 100;
+    public static final int MAX_VARIANT_LENGTH = 120;
 
     // EXPRESSÕES REGULARES (REGEX)
     @SuppressWarnings("java:S2068")
@@ -45,4 +47,8 @@ public class ValidationConstants {
 
     // SLUG
     public static final String MSG_SLUG_INVALID = "O slug deve conter apenas letras minúsculas, números e hífens";
+
+    // ERP & SKUS
+    public static final String MSG_ERP_CODE_REQUIRED = "O código do produto no ERP (Id_Pro) é obrigatório e deve ser um número inteiro positivo.";
+    public static final String MSG_VARIANT_INVALID = "O nome do sabor ou apresentação não pode ser vazio ou conter apenas pontuação.";
 }

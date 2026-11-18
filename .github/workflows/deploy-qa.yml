@@ -67,4 +67,12 @@ jobs:
             mailSenderUsername=${{ secrets.MAIL_USERNAME }}
             mailSenderPassword=${{ secrets.MAIL_PASSWORD }}
             FITOHERB_AI_URL=https://fitoherb-ai-qa-973619276831.us-central1.run.app
+            ERP_SQLSERVER_HOST=${{ secrets.ERP_SQLSERVER_HOST }}
+            ERP_SQLSERVER_PORT=${{ secrets.ERP_SQLSERVER_PORT }}
+            ERP_SQLSERVER_DATABASE=${{ secrets.ERP_SQLSERVER_DATABASE }}
+            ERP_SQLSERVER_USERNAME=${{ secrets.ERP_SQLSERVER_USERNAME }}
+            ERP_SQLSERVER_PASSWORD=${{ secrets.ERP_SQLSERVER_PASSWORD }}
+            SYNC_SCHEDULER_TOKEN=${{ secrets.SYNC_SCHEDULER_TOKEN }}
+            INTERNAL_REFRESH_TOKEN=${{ secrets.INTERNAL_REFRESH_TOKEN }}
+            ERP_SYNC_REPORT_EMAIL=${{ secrets.ERP_SYNC_REPORT_EMAIL }}
 
