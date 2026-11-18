@@ -8,7 +8,7 @@ import java.util.Map;
 public class ServiceUnavailableException extends RuntimeException {
 
     private final String code;
-    private final Map<String, Object> details;
+    private final transient Map<String, Object> details;
 
     public ServiceUnavailableException(String message) {
         super(message);

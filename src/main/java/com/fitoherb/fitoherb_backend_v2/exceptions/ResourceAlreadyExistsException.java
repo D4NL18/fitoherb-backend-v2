@@ -8,7 +8,7 @@ import java.util.Map;
 public class ResourceAlreadyExistsException extends RuntimeException {
 
     private final String code;
-    private final Map<String, Object> details;
+    private final transient Map<String, Object> details;
 
     public ResourceAlreadyExistsException(String message) {
         super(message);

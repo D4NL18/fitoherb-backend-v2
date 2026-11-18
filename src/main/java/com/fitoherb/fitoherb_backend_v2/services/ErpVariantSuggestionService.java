@@ -25,25 +25,26 @@ public class ErpVariantSuggestionService {
     private static final Map<Pattern, String> FLAVOUR_PATTERNS = new LinkedHashMap<>();
 
     static {
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:BAUNILHA|BAUN\\.?)\\b"), "Baunilha");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:CHOCOLATE\\s+BRANCO|CHOC\\.?\\s+BRANCO)\\b"), "Chocolate Branco");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:CHOCOLATE|CHOCO|CHOC\\.?)\\b"), "Chocolate");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:MORANGO|MOR\\.?)\\b"), "Morango");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:LIMAO|LIMÃO|LIM\\.?)\\b"), "Limão");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:MELANCIA|MELANC\\.?)\\b"), "Melancia");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:FRUIT\\s+PUNCH|FRUTAS\\s+VERMELHAS)\\b"), "Fruit Punch");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:COOKIES(?:\\s+AND\\s+CREAM)?|COOK\\.?)\\b"), "Cookies");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:LARANJA|LAR\\.?)\\b"), "Laranja");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:UVA)\\b"), "Uva");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:ABACAXI|ABAC\\.?)\\b"), "Abacaxi");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:MARACUJA|MARACUJÁ)\\b"), "Maracujá");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:TANGERINA|TANG\\.?)\\b"), "Tangerina");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:MACA\\s+VERDE|MAÇÃ\\s+VERDE)\\b"), "Maçã Verde");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:BANANA)\\b"), "Banana");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:COCO)\\b"), "Coco");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:AMENDOIM|PAÇOCA|PACOCA)\\b"), "Amendoim");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:DOCE\\s+DE\\s+LEITE)\\b"), "Doce de Leite");
-        FLAVOUR_PATTERNS.put(Pattern.compile("(?i)\\b(?:NEUTRO|NATURAL|SEM\\s+SABOR)\\b"), "Neutro");
+        int flags = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ;
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:BAUNILHA|BAUN\\.?)\\b", flags), "Baunilha");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:CHOCOLATE\\s+BRANCO|CHOC\\.?\\s+BRANCO)\\b", flags), "Chocolate Branco");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:CHOCOLATE|CHOCO|CHOC\\.?)\\b", flags), "Chocolate");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:MORANGO|MOR\\.?)\\b", flags), "Morango");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:LIMAO|LIMÃO|LIM\\.?)\\b", flags), "Limão");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:MELANCIA|MELANC\\.?)\\b", flags), "Melancia");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:FRUIT\\s+PUNCH|FRUTAS\\s+VERMELHAS)\\b", flags), "Fruit Punch");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:COOKIES(?:\\s+AND\\s+CREAM)?|COOK\\.?)\\b", flags), "Cookies");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:LARANJA|LAR\\.?)\\b", flags), "Laranja");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\bUVA\\b", flags), "Uva");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:ABACAXI|ABAC\\.?)\\b", flags), "Abacaxi");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:MARACUJA|MARACUJÁ)\\b", flags), "Maracujá");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:TANGERINA|TANG\\.?)\\b", flags), "Tangerina");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:MACA\\s+VERDE|MAÇÃ\\s+VERDE)\\b", flags), "Maçã Verde");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\bBANANA\\b", flags), "Banana");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\bCOCO\\b", flags), "Coco");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:AMENDOIM|PAÇOCA|PACOCA)\\b", flags), "Amendoim");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\bDOCE\\s+DE\\s+LEITE\\b", flags), "Doce de Leite");
+        FLAVOUR_PATTERNS.put(Pattern.compile("\\b(?:NEUTRO|NATURAL|SEM\\s+SABOR)\\b", flags), "Neutro");
     }
 
     public SuggestVariantsRes suggest(
@@ -145,7 +146,7 @@ public class ErpVariantSuggestionService {
             String raw = matcher.group(1).trim().replaceAll("\\s+", "");
             String upper = raw.toUpperCase(Locale.ROOT);
             if (upper.endsWith("CAPS") || upper.endsWith("CAP") || upper.endsWith("CP")) {
-                String digits = upper.replaceAll("[^0-9]", "");
+                String digits = upper.replaceAll("\\D", "");
                 return digits + " Cápsulas";
             }
             if (upper.endsWith("GR")) {
@@ -177,8 +178,8 @@ public class ErpVariantSuggestionService {
         StringBuilder sb = new StringBuilder();
         for (String word : words) {
             if (word.isEmpty()) continue;
-            if (sb.length() > 0) sb.append(" ");
-            if (word.matches("\\d+.*")) {
+            if (!sb.isEmpty()) sb.append(" ");
+            if (!word.isEmpty() && Character.isDigit(word.charAt(0))) {
                 sb.append(word.toLowerCase(Locale.ROOT));
             } else if (word.length() <= 2) {
                 sb.append(word.toLowerCase(Locale.ROOT));
@@ -203,9 +204,6 @@ public class ErpVariantSuggestionService {
         }
         if (anyFlavour) {
             return ProductTopology.FLAVOUR_ONLY;
-        }
-        if (anyPresentation && items.size() > 1) {
-            return ProductTopology.PRESENTATION_ONLY;
         }
         if (anyPresentation) {
             return ProductTopology.PRESENTATION_ONLY;
