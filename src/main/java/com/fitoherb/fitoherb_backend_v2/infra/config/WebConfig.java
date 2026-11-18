@@ -21,7 +21,9 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
+                        "http://localhost:4100",
                         "http://localhost:4200",
+                        "http://localhost:4201",
                         "https://fitoherb.web.app",
                         "https://fitoherb.firebaseapp.com",
                         "https://fitoherb.com.br",

@@ -1,8 +1,11 @@
 package com.fitoherb.fitoherb_backend_v2.controllers;
 
 import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductAdminRes;
 import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Product;
+import com.fitoherb.fitoherb_backend_v2.enums.ErpMappingStatus;
+import com.fitoherb.fitoherb_backend_v2.enums.ProductCurationStatus;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.infra.exceptions.RestValidationErrorMessage;
 import com.fitoherb.fitoherb_backend_v2.services.ProductService;
@@ -18,7 +21,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.*;
 
@@ -46,7 +49,7 @@ public class ProductController {
     @Operation(summary = "Get product details by slug", description = "Retrieves full details of a specific product using its unique slug. Restricted to administrators.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product details retrieved",
-                    content = @Content(schema = @Schema(implementation = ProductRes.class))),
+                    content = @Content(schema = @Schema(implementation = ProductAdminRes.class))),
             @ApiResponse(responseCode = "404", description = "Product not found",
                     content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
                             examples = @ExampleObject(name = "Product Not Found", value = "{\"status\": \"NOT_FOUND\", \"message\": \"Product not found with slug: chamomile-tea\"}"))),
@@ -56,10 +59,10 @@ public class ProductController {
     })
     @PreAuthorize("@authorizationService.isAdminOrUser()")
     @GetMapping("/{slug}")
-    public ResponseEntity<ProductRes> getProductBySlug(
+    public ResponseEntity<ProductAdminRes> getProductBySlug(
             @PathVariable @Valid @NotBlank @Pattern(regexp = SLUG_REGEX, message = MSG_SLUG_INVALID) String slug
     ) {
-        ProductRes productRes = productService.getProductBySlug(slug);
+        ProductAdminRes productRes = productService.getProductBySlug(slug);
         return ResponseEntity.ok(productRes);
     }
 
@@ -71,27 +74,38 @@ public class ProductController {
                             examples = @ExampleObject(name = "Unauthorized", value = "{\"status\": \"UNAUTHORIZED\", \"message\": \"Token JWT invalid or expired\"}")))
     })
     @PreAuthorize("@authorizationService.isAdminOrUser()")
-    @GetMapping
-    public ResponseEntity<Page<ProductRes>> getAllProductsPaginated(
-            @Parameter(description = "Global search term for product name", example = "Eucalyptus")
+    @GetMapping({"", "/admin"})
+    public ResponseEntity<Page<ProductAdminRes>> getAllProductsPaginated(
+            @Parameter(description = "Global search term for product name or ERP code", example = "131477")
             @RequestParam(required = false) String search,
 
             @Parameter(description = "Filter by category slugs", example = "essential-oils,herbs")
-            @RequestParam(required = false) java.util.List<String> category,
+            @RequestParam(required = false) List<String> category,
 
             @Parameter(description = "Filter by supplier slugs", example = "nature-labs,vita-supplements")
-            @RequestParam(required = false) java.util.List<String> supplier,
+            @RequestParam(required = false) List<String> supplier,
+
+            @Parameter(description = "Filter by ERP mapping status")
+            @RequestParam(required = false) List<ErpMappingStatus> erpStatus,
+
+            @Parameter(description = "Filter by active visibility")
+            @RequestParam(required = false) Boolean active,
+
+            @Parameter(description = "Filter by curation status")
+            @RequestParam(required = false) ProductCurationStatus curationStatus,
 
             @Parameter(description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
-            @Parameter(description = "Field to sort by", schema = @Schema(allowableValues = {"name", "createdAt", "price"}))
+            @Parameter(description = "Field to sort by", schema = @Schema(allowableValues = {"name", "createdAt", "category.name", "supplier.name"}))
             @RequestParam(defaultValue = "name") String sortField,
 
             @Parameter(description = "Sort direction", schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(defaultValue = "ASC") String direction
     ) {
-        Page<ProductRes> products = this.productService.getAllProductsPaginated(search, category, supplier, page, sortField, direction);
+        Page<ProductAdminRes> products = this.productService.getAllProductsPaginated(
+                search, category, supplier, erpStatus, active, curationStatus, page, sortField, direction
+        );
         return ResponseEntity.ok(products);
     }
 
@@ -111,10 +125,10 @@ public class ProductController {
             @RequestParam(required = false) String search,
 
             @Parameter(description = "Filter by category slugs", example = "essential-oils,herbs")
-            @RequestParam(required = false) java.util.List<String> category,
+            @RequestParam(required = false) List<String> category,
 
             @Parameter(description = "Filter by supplier slugs", example = "nature-labs,vita-supplements")
-            @RequestParam(required = false) java.util.List<String> supplier,
+            @RequestParam(required = false) List<String> supplier,
 
             @Parameter(description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,
@@ -129,28 +143,25 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @Operation(summary = "Create a new product", description = "Registers a product with its metadata and a required image file. Automatically generates a unique SEO slug.")
+    @Operation(summary = "Create a new product", description = "Registers a product with its metadata and a required image file (unless PENDING_IMAGE). Automatically generates a unique SEO slug.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Product created successfully"),
             @ApiResponse(responseCode = "400", description = "Validation error",
                     content = @Content(schema = @Schema(implementation = RestValidationErrorMessage.class),
                             examples = @ExampleObject(name = "Validation Error", value = "{\"status\": \"BAD_REQUEST\", \"message\": \"Validation failed for one or more fields\", \"errors\": {\"name\": \"must not be blank\", \"categorySlug\": \"must not be null\"}}"))),
-            @ApiResponse(responseCode = "409", description = "Conflict: Name or slug already exists",
-                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
-                            examples = {
-                                    @ExampleObject(name = "Name Conflict", value = "{\"status\": \"CONFLICT\", \"message\": \"Product with that name already exists\"}"),
-                                    @ExampleObject(name = "Slug Conflict", value = "{\"status\": \"CONFLICT\", \"message\": \"A product with a similar name already exists (Slug conflict: chamomile-tea)\"}")
-                            })),
+            @ApiResponse(responseCode = "409", description = "Conflict: Name, slug or ERP code already exists",
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class))),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Entity: ERP validation or topology rule failed",
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class))),
             @ApiResponse(responseCode = "404", description = "Category or Supplier not found",
-                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
-                            examples = @ExampleObject(name = "Related Resource Not Found", value = "{\"status\": \"NOT_FOUND\", \"message\": \"Category not found with slug: organic-teas\"}")))
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class)))
     })
     @PreAuthorize("@authorizationService.isAdminOrUser()")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createProduct(
             @RequestBody(content = @Content(encoding = @Encoding(name = "product", contentType = MediaType.APPLICATION_JSON_VALUE)))
             @RequestPart(value = "product") @Valid ProductReq productReq,
-            @RequestPart(value = "image") @NotNull(message = MSG_REQUIRED_FIELD) MultipartFile image
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         Product savedProduct = productService.createProduct(productReq, image);
 
@@ -167,14 +178,13 @@ public class ProductController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product updated successfully"),
             @ApiResponse(responseCode = "404", description = "Resource not found",
-                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
-                            examples = @ExampleObject(name = "Product Not Found", value = "{\"status\": \"NOT_FOUND\", \"message\": \"Product not found with slug: old-slug\"}"))),
-            @ApiResponse(responseCode = "409", description = "Conflict: New slug already in use",
-                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
-                            examples = @ExampleObject(name = "Slug Conflict", value = "{\"status\": \"CONFLICT\", \"message\": \"A product with a similar name already exists (Slug conflict: new-slug)\"}"))),
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "Conflict: New slug or ERP code already in use",
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class))),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Entity: ERP validation or topology rule failed",
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class))),
             @ApiResponse(responseCode = "500", description = "Internal error during update",
-                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
-                            examples = @ExampleObject(name = "Database Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to update product in database.\"}")))
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class)))
     })
     @PreAuthorize("@authorizationService.isAdminOrUser()")
     @PutMapping(value = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -192,11 +202,9 @@ public class ProductController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product deleted successfully"),
             @ApiResponse(responseCode = "404", description = "Product not found",
-                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
-                            examples = @ExampleObject(name = "Not Found", value = "{\"status\": \"NOT_FOUND\", \"message\": \"Product not found with slug: chamomile-tea\"}"))),
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class))),
             @ApiResponse(responseCode = "500", description = "Database error during deletion",
-                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class),
-                            examples = @ExampleObject(name = "Integrity Error", value = "{\"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"Failed to delete product. Ensure there are no records linked to this account.\"}")))
+                    content = @Content(schema = @Schema(implementation = RestErrorMessage.class)))
     })
     @PreAuthorize("@authorizationService.isAdminOrUser()")
     @DeleteMapping("/{slug}")

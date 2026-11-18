@@ -1,6 +1,8 @@
 package com.fitoherb.fitoherb_backend_v2.dtos.requests;
 
+import com.fitoherb.fitoherb_backend_v2.enums.ProductCurationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -39,6 +41,17 @@ public class ProductReq {
     @Schema(description = "Presentations available for that product", example = "[\"100g\", \"250g\", \"500g\"]")
     @Size(max = MAX_ARRAY_SIZE, message = MSG_ARRAY_SIZE)
     private List<String> presentation;
+
+    @Schema(description = "Confirmação explícita para vincular SKU inativo no ERP Atrio (inativo_pro = 1)", example = "false")
+    private Boolean allowInactiveErp = false;
+
+    @Schema(description = "Status de curadoria do produto", example = "COMPLETE")
+    private ProductCurationStatus curationStatus = ProductCurationStatus.COMPLETE;
+
+    @Schema(description = "Lista de SKUs vinculados ao ERP Atrio")
+    @Valid
+    @Size(max = MAX_SKUS_PER_PRODUCT)
+    private List<ProductSkuReq> skus;
 
     public void setDescription(String description) {
         this.description = (description != null && description.trim().isEmpty()) ? null : description;

@@ -13,7 +13,7 @@ public class ImageUrlBuilder {
     private String bucketName;
 
     private String buildUrl(String folder, String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) return null;
+        if (imagePath == null || imagePath.isBlank()) return null;
         if (activeProfile != null && (activeProfile.contains("prod") || activeProfile.contains("qa"))) {
             return "https://storage.googleapis.com/" + bucketName + "/" + folder + "/" + imagePath;
         } else {
