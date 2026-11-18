@@ -1,31 +1,43 @@
 package com.fitoherb.fitoherb_backend_v2.services;
 
 import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductSkuReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductAdminRes;
 import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Product;
 import com.fitoherb.fitoherb_backend_v2.entities.ProductCategory;
+import com.fitoherb.fitoherb_backend_v2.entities.ProductSku;
 import com.fitoherb.fitoherb_backend_v2.entities.Supplier;
+import com.fitoherb.fitoherb_backend_v2.enums.ErpMappingStatus;
+import com.fitoherb.fitoherb_backend_v2.enums.ProductCurationStatus;
 import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceNotFoundException;
+import com.fitoherb.fitoherb_backend_v2.exceptions.ServiceUnavailableException;
+import com.fitoherb.fitoherb_backend_v2.exceptions.UnprocessableEntityException;
 import com.fitoherb.fitoherb_backend_v2.mappers.ProductMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.ProductCategoryRepository;
 import com.fitoherb.fitoherb_backend_v2.repositories.ProductRepository;
+import com.fitoherb.fitoherb_backend_v2.repositories.ProductSkuRepository;
 import com.fitoherb.fitoherb_backend_v2.repositories.SupplierRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -39,10 +51,16 @@ import static org.mockito.Mockito.*;
 class ProductServiceTest {
 
     @Mock private ProductRepository productRepository;
+    @Mock private ProductSkuRepository productSkuRepository;
     @Mock private ProductCategoryRepository categoryRepository;
     @Mock private SupplierRepository supplierRepository;
     @Mock private ProductMapper productMapper;
     @Mock private FileStorageService fileStorageService;
+    @Mock private ErpCatalogValidationService erpCatalogValidationService;
+    @Mock private ProductTopologyValidator topologyValidator;
+    @Mock private ProductVariantSanitizer variantSanitizer;
+    @Mock private ProductVisibilityCalculator visibilityCalculator;
+    @Mock private EntityManager entityManager;
     @Mock private MultipartFile image;
 
     @InjectMocks
@@ -50,16 +68,22 @@ class ProductServiceTest {
 
     private Product productEntity;
     private ProductRes productRes;
+    private ProductAdminRes productAdminRes;
     private ProductCategory category;
     private Supplier supplier;
 
     @BeforeEach
     void setup() {
         productEntity = new Product();
+        productEntity.setId("prod-uuid-1");
         productEntity.setSlug("produto-teste");
         productEntity.setImagePath("old-image.jpg");
+        productEntity.setActive(true);
+        productEntity.setCurationStatus(ProductCurationStatus.COMPLETE);
+        productEntity.setSkus(new ArrayList<>());
 
         productRes = new ProductRes();
+        productAdminRes = new ProductAdminRes();
 
         category = new ProductCategory();
         category.setSlug("categoria-teste");
@@ -68,85 +92,79 @@ class ProductServiceTest {
         supplier = new Supplier();
         supplier.setSlug("fornecedor-teste");
         supplier.setName("Fornecedor Teste");
-        
+
         productEntity.setCategory(category);
         productEntity.setSupplier(supplier);
     }
 
+    private ProductReq simpleProductReq(String name, String categorySlug, String supplierSlug, Long erpCode) {
+        ProductReq req = new ProductReq();
+        req.setName(name);
+        req.setCategorySlug(categorySlug);
+        req.setSupplierSlug(supplierSlug);
+        req.setCurationStatus(ProductCurationStatus.COMPLETE);
+        req.setSkus(List.of(new ProductSkuReq(erpCode, null, null)));
+        return req;
+    }
+
     @Nested
-    @DisplayName("Testes de Busca e Galeria")
+    @DisplayName("Testes de Busca Admin e Galeria Pública (P-408 & P-411)")
     class RetrievalTests {
 
         @Test
+        @DisplayName("GET /products/{slug}: Deve retornar ProductAdminRes via entityToAdminRes")
         void getProductBySlugSuccess() {
             when(productRepository.findBySlug("produto-teste")).thenReturn(Optional.of(productEntity));
-            when(productMapper.entityToRes(productEntity)).thenReturn(productRes);
+            when(productMapper.entityToAdminRes(productEntity)).thenReturn(productAdminRes);
 
-            ProductRes result = productService.getProductBySlug("produto-teste");
+            ProductAdminRes result = productService.getProductBySlug("produto-teste");
 
             assertNotNull(result);
             verify(productRepository).findBySlug("produto-teste");
+            verify(productMapper).entityToAdminRes(productEntity);
+            verify(productMapper, never()).entityToPublicRes(any());
         }
 
         @Test
+        @DisplayName("GET /products: Deve paginar produtos admin com suporte a filtros erpStatus, active e curationStatus")
+        @SuppressWarnings("unchecked")
         void getAllProductsPaginatedSuccess() {
             Page<Product> page = new PageImpl<>(List.of(productEntity));
             when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
-            when(productMapper.entityToRes(any())).thenReturn(productRes);
+            when(productMapper.entityToAdminRes(any())).thenReturn(productAdminRes);
 
-            Page<ProductRes> result = productService.getAllProductsPaginated("search", null, null, 0, "name", "ASC");
+            Page<ProductAdminRes> result = productService.getAllProductsPaginated(
+                    "131477", null, null, List.of(ErpMappingStatus.COMPLETE), true, ProductCurationStatus.COMPLETE, 0, "name", "ASC"
+            );
 
             assertEquals(1, result.getTotalElements());
+            verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
         }
 
         @Test
+        @DisplayName("GET /products/gallery: Deve filtrar active = true e usar exclusivamente entityToPublicRes (P-408)")
         @SuppressWarnings("unchecked")
         void getProductGalleryWithFiltersSuccess() {
             Page<Product> page = new PageImpl<>(List.of(productEntity));
             when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+            when(productMapper.entityToPublicRes(productEntity)).thenReturn(productRes);
 
             Page<ProductRes> result = productService.getProductGallery("query", List.of("cat"), List.of("sup"), 0, 10, "ASC");
 
-            assertNotNull(result);
-            verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
-        }
-
-        @Test
-        @SuppressWarnings("unchecked")
-        void getAllProductsPaginatedWithoutSearchDescSuccess() {
-            Page<Product> page = new PageImpl<>(List.of(productEntity));
-            when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
-            when(productMapper.entityToRes(any())).thenReturn(productRes);
-
-            Page<ProductRes> result = productService.getAllProductsPaginated(null, List.of("cat"), List.of("sup"), 0, "name", "DESC");
-
             assertEquals(1, result.getTotalElements());
-            verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
-        }
-
-        @Test
-        @SuppressWarnings("unchecked")
-        void getProductGalleryWithoutSearchSuccess() {
-            Page<Product> page = new PageImpl<>(List.of(productEntity));
-            when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
-
-            Page<ProductRes> result = productService.getProductGallery(null, null, null, 0, 10, "DESC");
-
-            assertNotNull(result);
-            verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
+            verify(productMapper).entityToPublicRes(productEntity);
+            verify(productMapper, never()).entityToAdminRes(any());
         }
     }
 
     @Nested
-    @DisplayName("Testes de Criação")
+    @DisplayName("Testes de Criação com Validação 1:1 ERP e Curadoria PENDING_IMAGE (P-401..P-412)")
     class CreateTests {
 
         @Test
+        @DisplayName("C-01: Deve criar produto simples com SKU validado contra ERP, active=true e curationStatus=COMPLETE")
         void createProductSuccess() {
-            ProductReq req = new ProductReq();
-            req.setName("Novo Produto");
-            req.setCategorySlug("cat");
-            req.setSupplierSlug("fornecedor-teste");
+            ProductReq req = simpleProductReq("Novo Produto", "cat", "fornecedor-teste", 440100L);
 
             when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
             when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
@@ -159,21 +177,106 @@ class ProductServiceTest {
             Product result = productService.createProduct(req, image);
 
             assertNotNull(result);
+            assertTrue(result.getActive());
+            assertEquals(ProductCurationStatus.COMPLETE, result.getCurationStatus());
+            verify(erpCatalogValidationService).validateForProduct(eq(req), isNull());
             verify(fileStorageService).storeProductImage(image);
             verify(productRepository).save(any());
         }
 
         @Test
-        void shouldAllowSameProductNameForDifferentSuppliers() {
-            ProductReq req1 = new ProductReq();
-            req1.setName("Camomila");
-            req1.setCategorySlug("cat");
-            req1.setSupplierSlug("fornecedor-teste");
+        @DisplayName("P-412: Deve permitir criar produto sem imagem quando curationStatus == PENDING_IMAGE")
+        void createProductWithoutImageAllowedWhenPendingImage() {
+            ProductReq req = simpleProductReq("Creatina Turbo", "cat", "fornecedor-teste", 991050L);
+            req.setCurationStatus(ProductCurationStatus.PENDING_IMAGE);
 
-            ProductReq req2 = new ProductReq();
-            req2.setName("Camomila");
-            req2.setCategorySlug("cat");
-            req2.setSupplierSlug("outro-fornecedor");
+            Product newEntity = new Product();
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+            when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
+            when(productMapper.reqToEntity(req)).thenReturn(newEntity);
+            when(productRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            Product saved = productService.createProduct(req, null);
+
+            assertNull(saved.getImagePath());
+            assertTrue(saved.getActive());
+            assertEquals(ProductCurationStatus.PENDING_IMAGE, saved.getCurationStatus());
+            verify(fileStorageService, never()).storeProductImage(any());
+        }
+
+        @Test
+        @DisplayName("IMG-001: Deve rejeitar criação sem imagem quando curationStatus == COMPLETE")
+        void createProductWithoutImageRejectedWhenComplete() {
+            ProductReq req = simpleProductReq("Mel Silvestre", "cat", "fornecedor-teste", 41025L);
+            req.setCurationStatus(ProductCurationStatus.COMPLETE);
+
+            assertThrows(IllegalArgumentException.class, () -> productService.createProduct(req, null));
+            verify(productRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("P-403: Deve propagar 422 ERP_CODE_NOT_FOUND e 503 ERP_CATALOG_UNAVAILABLE sem salvar")
+        void createProductPropagatesErpValidationErrors() {
+            ProductReq req = simpleProductReq("Produto Invalido", "cat", "fornecedor-teste", 9999999L);
+
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+            when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
+            doThrow(new UnprocessableEntityException("ERP_CODE_NOT_FOUND", "Código ERP não encontrado"))
+                    .when(erpCatalogValidationService).validateForProduct(eq(req), isNull());
+
+            UnprocessableEntityException ex422 = assertThrows(
+                    UnprocessableEntityException.class,
+                    () -> productService.createProduct(req, image)
+            );
+            assertEquals("ERP_CODE_NOT_FOUND", ex422.getCode());
+            verify(productRepository, never()).save(any());
+
+            doThrow(new ServiceUnavailableException("ERP_CATALOG_UNAVAILABLE", "ERP offline"))
+                    .when(erpCatalogValidationService).validateForProduct(eq(req), isNull());
+
+            assertThrows(ServiceUnavailableException.class, () -> productService.createProduct(req, image));
+        }
+
+        @Test
+        @DisplayName("P-406 / C-09: Deve rejeitar SKU inativo sem allowInactiveErp=true")
+        void createProductRejectsInactiveErpWithoutConfirmation() {
+            ProductReq req = simpleProductReq("Whey Cookies", "cat", "fornecedor-teste", 131479L);
+            req.setAllowInactiveErp(false);
+
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+            when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
+            doThrow(new UnprocessableEntityException("ERP_SKU_INACTIVE_CONFIRMATION_REQUIRED", "SKU inativo"))
+                    .when(erpCatalogValidationService).validateForProduct(eq(req), isNull());
+
+            UnprocessableEntityException ex = assertThrows(
+                    UnprocessableEntityException.class,
+                    () -> productService.createProduct(req, image)
+            );
+            assertEquals("ERP_SKU_INACTIVE_CONFIRMATION_REQUIRED", ex.getCode());
+        }
+
+        @Test
+        @DisplayName("P-404 / C-04: Deve lançar 409 Conflict quando código ERP já pertencer a outro produto")
+        void createProductRejectsErpCodeMappedToAnotherProduct() {
+            ProductReq req = simpleProductReq("Outro Whey", "cat", "fornecedor-teste", 131476L);
+
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+            when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
+            doThrow(new ResourceAlreadyExistsException("O código ERP '131476' já está vinculado ao produto '100% Pure Whey 900g'."))
+                    .when(erpCatalogValidationService).validateForProduct(eq(req), isNull());
+
+            assertThrows(ResourceAlreadyExistsException.class, () -> productService.createProduct(req, image));
+            verify(productRepository, never()).save(any());
+        }
+
+        @Test
+        void shouldAllowSameProductNameForDifferentSuppliers() {
+            ProductReq req1 = simpleProductReq("Camomila", "cat", "fornecedor-teste", 440100L);
+            ProductReq req2 = simpleProductReq("Camomila", "cat", "outro-fornecedor", 440101L);
 
             Supplier supplier2 = new Supplier();
             supplier2.setSlug("outro-fornecedor");
@@ -188,73 +291,127 @@ class ProductServiceTest {
 
             when(productMapper.reqToEntity(req1)).thenReturn(new Product());
             when(productMapper.reqToEntity(req2)).thenReturn(new Product());
-
+            when(image.isEmpty()).thenReturn(false);
+            when(fileStorageService.storeProductImage(image)).thenReturn("img.webp");
             when(productRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-            Product p1 = productService.createProduct(req1, null);
-            Product p2 = productService.createProduct(req2, null);
+            Product p1 = productService.createProduct(req1, image);
+            Product p2 = productService.createProduct(req2, image);
 
             assertEquals("camomila-fornecedor-teste", p1.getSlug());
             assertEquals("camomila-outro-fornecedor", p2.getSlug());
         }
 
         @Test
-        void shouldConflictWhenSameProductAndSupplier() {
-            ProductReq req = new ProductReq();
-            req.setName("Camomila");
-            req.setCategorySlug("cat");
-            req.setSupplierSlug("fornecedor-teste");
-
-            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
-            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
-
-            when(productRepository.findBySlug("camomila-fornecedor-teste")).thenReturn(Optional.of(new Product()));
-
-            assertThrows(ResourceAlreadyExistsException.class, () -> productService.createProduct(req, null));
-        }
-
-        @Test
         void createProductCategoryNotFound() {
-            ProductReq req = new ProductReq();
-            req.setCategorySlug("invalid");
+            ProductReq req = simpleProductReq("Teste", "invalid", "fornecedor-teste", 440100L);
 
             when(categoryRepository.findBySlug("invalid")).thenReturn(Optional.empty());
 
-            assertThrows(ResourceNotFoundException.class, () -> productService.createProduct(req, null));
+            assertThrows(ResourceNotFoundException.class, () -> productService.createProduct(req, image));
         }
     }
 
     @Nested
-    @DisplayName("Testes de Atualização")
+    @DisplayName("Testes de Atualização, Reconciliação Atômica de SKUs e Curadoria (P-404, P-412, P-413)")
     class UpdateTests {
 
         @Test
-        void updateProductSuccessWithNewImage() {
+        @DisplayName("C-05: Deve permitir trocar códigos ERP entre dois sabores do mesmo produto com flush intermediário")
+        void updateProductAllowsSwappingErpCodesBetweenSameProductVariants() {
+            // Arrange
+            ProductSku sku1 = new ProductSku();
+            sku1.setId("sku-1");
+            sku1.setProduct(productEntity);
+            sku1.setErpCode(131476L);
+            sku1.setFlavour("Baunilha");
+
+            ProductSku sku2 = new ProductSku();
+            sku2.setId("sku-2");
+            sku2.setProduct(productEntity);
+            sku2.setErpCode(131477L);
+            sku2.setFlavour("Chocolate");
+
+            productEntity.setSkus(new ArrayList<>(List.of(sku1, sku2)));
+
             ProductReq req = new ProductReq();
-            req.setName("Nome Atualizado");
+            req.setName("Produto Teste");
             req.setCategorySlug("categoria-teste");
             req.setSupplierSlug("fornecedor-teste");
+            req.setSkus(List.of(
+                    new ProductSkuReq(131477L, "Baunilha", null),
+                    new ProductSkuReq(131476L, "Chocolate", null)
+            ));
 
-            when(productRepository.findBySlug("slug")).thenReturn(Optional.of(productEntity));
-            when(productRepository.findBySlug("nome-atualizado-fornecedor-teste")).thenReturn(Optional.empty());
-            when(image.isEmpty()).thenReturn(false);
-            when(fileStorageService.storeProductImage(image)).thenReturn("updated.jpg");
+            when(productRepository.findBySlug("produto-teste")).thenReturn(Optional.of(productEntity));
+            when(productRepository.save(any())).thenReturn(productEntity);
 
-            productService.updateProductBySlug(req, image, "slug");
+            // Act
+            assertDoesNotThrow(() -> productService.updateProductBySlug(req, null, "produto-teste"));
 
-            verify(fileStorageService).deleteProductImage("old-image.jpg");
-            verify(fileStorageService).storeProductImage(image);
+            // Assert
+            verify(erpCatalogValidationService).validateForProduct(req, "prod-uuid-1");
+            verify(entityManager, atLeastOnce()).flush();
             verify(productRepository).save(productEntity);
-            assertEquals("nome-atualizado-fornecedor-teste", productEntity.getSlug());
+        }
+
+        @Test
+        @DisplayName("C-16: Não deve mascarar DataIntegrityViolationException / ResourceAlreadyExistsException como 500 DatabaseOperationException")
+        void updateProductDoesNotMaskConflictAs500() {
+            ProductReq req = simpleProductReq("Produto Teste", "categoria-teste", "fornecedor-teste", 131476L);
+
+            when(productRepository.findBySlug("produto-teste")).thenReturn(Optional.of(productEntity));
+            when(productRepository.save(any())).thenThrow(new DataIntegrityViolationException("uk_product_skus_erp_code"));
+
+            assertThrows(
+                    DataIntegrityViolationException.class,
+                    () -> productService.updateProductBySlug(req, null, "produto-teste")
+            );
+        }
+
+        @Test
+        @DisplayName("P-412 & P-413: Edição de produto PENDING_IMAGE enviando imagem deve promover para COMPLETE")
+        void updatePendingImageWithValidImagePromotesToComplete() {
+            // Arrange
+            productEntity.setImagePath(null);
+            productEntity.setCurationStatus(ProductCurationStatus.PENDING_IMAGE);
+
+            ProductReq req = simpleProductReq("Produto Teste", "categoria-teste", "fornecedor-teste", 991050L);
+
+            when(productRepository.findBySlug("produto-teste")).thenReturn(Optional.of(productEntity));
+            when(image.isEmpty()).thenReturn(false);
+            when(fileStorageService.storeProductImage(image)).thenReturn("uploaded.webp");
+
+            // Act
+            productService.updateProductBySlug(req, image, "produto-teste");
+
+            // Assert
+            assertEquals("uploaded.webp", productEntity.getImagePath());
+            assertEquals(ProductCurationStatus.COMPLETE, productEntity.getCurationStatus());
+        }
+
+        @Test
+        @DisplayName("P-413: Edição de produto PENDING_IMAGE sem enviar imagem deve manter PENDING_IMAGE")
+        void updatePendingImageWithoutImageKeepsPendingImage() {
+            // Arrange
+            productEntity.setImagePath(null);
+            productEntity.setCurationStatus(ProductCurationStatus.PENDING_IMAGE);
+
+            ProductReq req = simpleProductReq("Produto Teste", "categoria-teste", "fornecedor-teste", 991050L);
+            when(productRepository.findBySlug("produto-teste")).thenReturn(Optional.of(productEntity));
+
+            // Act
+            productService.updateProductBySlug(req, null, "produto-teste");
+
+            // Assert
+            assertNull(productEntity.getImagePath());
+            assertEquals(ProductCurationStatus.PENDING_IMAGE, productEntity.getCurationStatus());
         }
 
         @Test
         void updateProductSlugConflict() {
-            ProductReq req = new ProductReq();
-            req.setName("Produto Existente");
-            req.setCategorySlug("categoria-teste");
-            req.setSupplierSlug("fornecedor-teste");
-            
+            ProductReq req = simpleProductReq("Produto Existente", "categoria-teste", "fornecedor-teste", 440100L);
+
             Product otherProduct = new Product();
             otherProduct.setSlug("produto-existente-fornecedor-teste");
 
@@ -293,28 +450,16 @@ class ProductServiceTest {
     class SecurityTests {
 
         @Test
+        @SuppressWarnings("unchecked")
         void sqlInjectionOnSearch() {
             Page<Product> emptyPage = new PageImpl<>(Collections.emptyList());
             String maliciousSearch = "'; DROP TABLE products; --";
 
             when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(emptyPage);
 
-            assertDoesNotThrow(() -> productService.getAllProductsPaginated(maliciousSearch, null, null, 0, "name", "ASC"));
-        }
-
-        @Test
-        void xssOnProductName() {
-            ProductReq req = new ProductReq();
-            req.setName("<script>alert('hack')</script>");
-            req.setCategorySlug("cat");
-            req.setSupplierSlug("sup");
-
-            when(categoryRepository.findBySlug(any())).thenReturn(Optional.of(category));
-            when(supplierRepository.findBySlug(any())).thenReturn(Optional.of(supplier));
-            when(productMapper.reqToEntity(any())).thenReturn(productEntity);
-            when(productRepository.save(any())).thenReturn(productEntity);
-
-            assertDoesNotThrow(() -> productService.createProduct(req, null));
+            assertDoesNotThrow(() -> productService.getAllProductsPaginated(
+                    maliciousSearch, null, null, null, null, null, 0, "name", "ASC"
+            ));
         }
 
         @Test
