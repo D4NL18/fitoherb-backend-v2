@@ -51,6 +51,7 @@ class ProductControllerContractTest {
     @MockitoBean private ProductService productService;
     @MockitoBean private TokenService tokenService;
     @MockitoBean private UserRepository userRepository;
+    @MockitoBean private com.fitoherb.fitoherb_backend_v2.services.ApiKeyService apiKeyService;
     @MockitoBean(name = "authorizationService") private AuthorizationService authorizationService;
 
     @Nested
