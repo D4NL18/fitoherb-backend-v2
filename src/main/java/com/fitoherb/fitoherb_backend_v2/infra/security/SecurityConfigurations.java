@@ -1,5 +1,6 @@
 package com.fitoherb.fitoherb_backend_v2.infra.security;
 
+import com.fitoherb.fitoherb_backend_v2.services.ApiKeyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,7 @@ import java.util.List;
 public class SecurityConfigurations {
 
     private final SecurityFilter securityFilter;
+    private final ApiKeyService apiKeyService;
     private final SyncSchedulerAuthFilter syncSchedulerAuthFilter;
 
     @Bean
@@ -44,6 +46,7 @@ public class SecurityConfigurations {
                             .anyRequest().permitAll()
                     )
                     .addFilterBefore(syncSchedulerAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(new ApiKeyAuthenticationFilter(apiKeyService), UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                     .build();
         } catch (Exception e) {
