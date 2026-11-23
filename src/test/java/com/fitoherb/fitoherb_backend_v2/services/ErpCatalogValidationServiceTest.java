@@ -18,12 +18,17 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -102,13 +107,60 @@ class ErpCatalogValidationServiceTest {
     }
 
     @Test
-    @DisplayName("P-403: Deve propagar 503 ERP_CATALOG_UNAVAILABLE quando ERP indisponível")
-    void shouldPropagate503WhenErpUnavailable() {
-        req.setSkus(List.of(new ProductSkuReq(131476L, null, null)));
+    @DisplayName("P-403: Deve fazer bypass automático (fail-open) quando ERP indisponível, interromper chamadas remotas e manter checagem local P-404")
+    void shouldBypassErpValidationFailOpenWhenErpUnavailableAndStillCheckLocalConflicts() {
+        // Arrange
+        req.setSkus(List.of(
+                new ProductSkuReq(131476L, "Baunilha", null),
+                new ProductSkuReq(131477L, "Chocolate", null)
+        ));
         when(erpCatalogCacheService.findByErpCode(131476L))
                 .thenThrow(new ServiceUnavailableException("ERP_CATALOG_UNAVAILABLE", "ERP offline"));
+        when(productSkuRepository.findConflictingSkus(List.of(131476L, 131477L), null))
+                .thenReturn(Collections.emptyList());
 
-        assertThrows(ServiceUnavailableException.class, () -> validationService.validateForProduct(req, null));
+        // Act
+        Map<Long, ErpCatalogItemSnapshot> result = validationService.validateForProduct(req, null);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(erpCatalogCacheService, times(1)).findByErpCode(131476L);
+        verify(erpCatalogCacheService, never()).findByErpCode(131477L);
+        verify(productSkuRepository, times(1)).findConflictingSkus(List.of(131476L, 131477L), null);
+    }
+
+    @Test
+    @DisplayName("P-403 & P-404: Mesmo com ERP indisponível, deve lançar 409 ERP_CODE_ALREADY_MAPPED se houver conflito no PostgreSQL")
+    void shouldStillThrow409ConflictWhenErpUnavailableAndLocalConflictExists() {
+        // Arrange
+        req.setSkus(List.of(new ProductSkuReq(131476L, "Baunilha", null)));
+
+        Product existingOwner = new Product();
+        existingOwner.setId("other-prod-id");
+        existingOwner.setName("100% Pure Whey 900g");
+        existingOwner.setSlug("100-pure-whey-900g");
+
+        ProductSku conflictingSku = new ProductSku();
+        conflictingSku.setErpCode(131476L);
+        conflictingSku.setProduct(existingOwner);
+
+        when(erpCatalogCacheService.findByErpCode(131476L))
+                .thenThrow(new ServiceUnavailableException("ERP_CATALOG_UNAVAILABLE", "ERP offline"));
+        when(productSkuRepository.findConflictingSkus(List.of(131476L), "current-prod-id"))
+                .thenReturn(List.of(conflictingSku));
+
+        // Act
+        ResourceAlreadyExistsException ex = assertThrows(
+                ResourceAlreadyExistsException.class,
+                () -> validationService.validateForProduct(req, "current-prod-id")
+        );
+
+        // Assert
+        assertEquals("ERP_CODE_ALREADY_MAPPED", ex.getCode());
+        assertTrue(ex.getMessage().contains("131476"));
+        assertTrue(ex.getMessage().contains("100% Pure Whey 900g"));
+        verify(productSkuRepository, times(1)).findConflictingSkus(List.of(131476L), "current-prod-id");
     }
 
     @Test

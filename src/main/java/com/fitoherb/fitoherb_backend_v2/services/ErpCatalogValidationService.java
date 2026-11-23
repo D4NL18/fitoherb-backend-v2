@@ -5,15 +5,18 @@ import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductSkuReq;
 import com.fitoherb.fitoherb_backend_v2.dtos.responses.ErpCatalogItemSnapshot;
 import com.fitoherb.fitoherb_backend_v2.entities.ProductSku;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
+import com.fitoherb.fitoherb_backend_v2.exceptions.ServiceUnavailableException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.UnprocessableEntityException;
 import com.fitoherb.fitoherb_backend_v2.repositories.ProductSkuRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 import static com.fitoherb.fitoherb_backend_v2.utils.validations.ValidationConstants.MSG_ERP_CODE_REQUIRED;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ErpCatalogValidationService {
@@ -62,16 +65,26 @@ public class ErpCatalogValidationService {
 
         Map<Long, ErpCatalogItemSnapshot> snapshots = new LinkedHashMap<>();
         List<Long> inactiveCodes = new ArrayList<>();
-        for (Long erpCode : seenErpCodes) {
-            ErpCatalogItemSnapshot snapshot = erpCatalogCacheService.findByErpCode(erpCode)
-                    .orElseThrow(() -> new UnprocessableEntityException(
-                            "ERP_CODE_NOT_FOUND",
-                            "Código ERP '" + erpCode + "' não encontrado no catálogo do ERP Atrio."
-                    ));
-            snapshots.put(erpCode, snapshot);
-            if (snapshot.isInativoPro()) {
-                inactiveCodes.add(erpCode);
+        try {
+            for (Long erpCode : seenErpCodes) {
+                ErpCatalogItemSnapshot snapshot = erpCatalogCacheService.findByErpCode(erpCode)
+                        .orElseThrow(() -> new UnprocessableEntityException(
+                                "ERP_CODE_NOT_FOUND",
+                                "Código ERP '" + erpCode + "' não encontrado no catálogo do ERP Atrio."
+                        ));
+                snapshots.put(erpCode, snapshot);
+                if (snapshot.isInativoPro()) {
+                    inactiveCodes.add(erpCode);
+                }
             }
+        } catch (ServiceUnavailableException e) {
+            log.warn(
+                    "ERP Atrio indisponível ao validar {} código(s) ERP (produto='{}'). Executando bypass automático (fail-open) da verificação remota (P-403).",
+                    seenErpCodes.size(),
+                    currentProductId != null ? currentProductId : "novo"
+            );
+            snapshots.clear();
+            inactiveCodes.clear();
         }
 
         if (!inactiveCodes.isEmpty() && !Boolean.TRUE.equals(req.getAllowInactiveErp())) {

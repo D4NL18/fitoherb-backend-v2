@@ -2,6 +2,7 @@ package com.fitoherb.fitoherb_backend_v2.services;
 
 import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductReq;
 import com.fitoherb.fitoherb_backend_v2.dtos.requests.ProductSkuReq;
+import com.fitoherb.fitoherb_backend_v2.dtos.responses.ErpCatalogItemSnapshot;
 import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductAdminRes;
 import com.fitoherb.fitoherb_backend_v2.dtos.responses.ProductRes;
 import com.fitoherb.fitoherb_backend_v2.entities.Product;
@@ -13,7 +14,6 @@ import com.fitoherb.fitoherb_backend_v2.enums.ProductCurationStatus;
 import com.fitoherb.fitoherb_backend_v2.exceptions.DatabaseOperationException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceAlreadyExistsException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.ResourceNotFoundException;
-import com.fitoherb.fitoherb_backend_v2.exceptions.ServiceUnavailableException;
 import com.fitoherb.fitoherb_backend_v2.exceptions.UnprocessableEntityException;
 import com.fitoherb.fitoherb_backend_v2.mappers.ProductMapper;
 import com.fitoherb.fitoherb_backend_v2.repositories.ProductCategoryRepository;
@@ -40,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -216,7 +217,7 @@ class ProductServiceTest {
         }
 
         @Test
-        @DisplayName("P-403: Deve propagar 422 ERP_CODE_NOT_FOUND e 503 ERP_CATALOG_UNAVAILABLE sem salvar")
+        @DisplayName("P-403: Deve propagar 422 ERP_CODE_NOT_FOUND sem salvar quando ERP estiver disponível")
         void createProductPropagatesErpValidationErrors() {
             ProductReq req = simpleProductReq("Produto Invalido", "cat", "fornecedor-teste", 9999999L);
 
@@ -232,11 +233,76 @@ class ProductServiceTest {
             );
             assertEquals("ERP_CODE_NOT_FOUND", ex422.getCode());
             verify(productRepository, never()).save(any());
+        }
 
-            doThrow(new ServiceUnavailableException("ERP_CATALOG_UNAVAILABLE", "ERP offline"))
-                    .when(erpCatalogValidationService).validateForProduct(eq(req), isNull());
+        @Test
+        @DisplayName("P-403: Em bypass por ERP indisponível (mapa vazio), deve persistir SKUs com erpLastVerifiedAt=null, ean=null, erpInactive=false, erpInactiveConfirmed=false e product.active=true")
+        void createProductWithErpBypassPersistsUnverifiedSkus() {
+            ProductReq req = new ProductReq();
+            req.setName("Whey Bypass");
+            req.setCategorySlug("cat");
+            req.setSupplierSlug("fornecedor-teste");
+            req.setCurationStatus(ProductCurationStatus.COMPLETE);
+            req.setAllowInactiveErp(true);
+            req.setSkus(List.of(
+                    new ProductSkuReq(131476L, "Baunilha", null),
+                    new ProductSkuReq(131477L, "Chocolate", null)
+            ));
 
-            assertThrows(ServiceUnavailableException.class, () -> productService.createProduct(req, image));
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+            when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
+            when(erpCatalogValidationService.validateForProduct(eq(req), isNull())).thenReturn(Collections.emptyMap());
+            when(productMapper.reqToEntity(req)).thenReturn(new Product());
+            when(image.isEmpty()).thenReturn(false);
+            when(fileStorageService.storeProductImage(image)).thenReturn("bypass-image.webp");
+            when(productRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            Product saved = productService.createProduct(req, image);
+
+            assertNotNull(saved);
+            assertTrue(saved.getActive());
+            assertEquals(2, saved.getSkus().size());
+            for (ProductSku sku : saved.getSkus()) {
+                assertNull(sku.getErpLastVerifiedAt());
+                assertNull(sku.getEan());
+                assertFalse(Boolean.TRUE.equals(sku.getErpInactive()));
+                assertFalse(Boolean.TRUE.equals(sku.getErpInactiveConfirmed()));
+            }
+            verify(productRepository).save(any(Product.class));
+        }
+
+        @Test
+        @DisplayName("P-403: Quando ERP disponível retorna snapshot válido, deve preencher erpLastVerifiedAt != null e ean do snapshot")
+        void createProductWithValidErpSnapshotPopulatesEanAndLastVerifiedAt() {
+            ProductReq req = simpleProductReq("Novo Produto ERP", "cat", "fornecedor-teste", 440100L);
+            ErpCatalogItemSnapshot snapshot = ErpCatalogItemSnapshot.builder()
+                    .erpCode(440100L)
+                    .description("NOVO PRODUTO ERP")
+                    .ean("7896311770011")
+                    .inativoPro(false)
+                    .build();
+
+            when(categoryRepository.findBySlug("cat")).thenReturn(Optional.of(category));
+            when(supplierRepository.findBySlug("fornecedor-teste")).thenReturn(Optional.of(supplier));
+            when(productRepository.findBySlug(anyString())).thenReturn(Optional.empty());
+            when(erpCatalogValidationService.validateForProduct(eq(req), isNull()))
+                    .thenReturn(Map.of(440100L, snapshot));
+            when(productMapper.reqToEntity(req)).thenReturn(new Product());
+            when(image.isEmpty()).thenReturn(false);
+            when(fileStorageService.storeProductImage(image)).thenReturn("erp-image.webp");
+            when(productRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            Product saved = productService.createProduct(req, image);
+
+            assertNotNull(saved);
+            assertTrue(saved.getActive());
+            assertEquals(1, saved.getSkus().size());
+            ProductSku sku = saved.getSkus().get(0);
+            assertNotNull(sku.getErpLastVerifiedAt());
+            assertEquals("7896311770011", sku.getEan());
+            assertFalse(Boolean.TRUE.equals(sku.getErpInactive()));
+            assertFalse(Boolean.TRUE.equals(sku.getErpInactiveConfirmed()));
         }
 
         @Test
@@ -353,6 +419,25 @@ class ProductServiceTest {
             verify(erpCatalogValidationService).validateForProduct(req, "prod-uuid-1");
             verify(entityManager, atLeastOnce()).flush();
             verify(productRepository).save(productEntity);
+        }
+
+        @Test
+        @DisplayName("P-403: Na edição em bypass por ERP indisponível (mapa vazio), deve persistir SKUs com erpLastVerifiedAt=null, ean=null, erpInactive=false e erpInactiveConfirmed=false")
+        void updateProductWithErpBypassPersistsUnverifiedSkus() {
+            ProductReq req = simpleProductReq("Produto Teste", "categoria-teste", "fornecedor-teste", 131476L);
+            when(productRepository.findBySlug("produto-teste")).thenReturn(Optional.of(productEntity));
+            when(erpCatalogValidationService.validateForProduct(req, "prod-uuid-1")).thenReturn(Collections.emptyMap());
+            when(productRepository.save(any())).thenReturn(productEntity);
+
+            productService.updateProductBySlug(req, null, "produto-teste");
+
+            assertTrue(productEntity.getActive());
+            assertEquals(1, productEntity.getSkus().size());
+            ProductSku sku = productEntity.getSkus().get(0);
+            assertNull(sku.getErpLastVerifiedAt());
+            assertNull(sku.getEan());
+            assertFalse(Boolean.TRUE.equals(sku.getErpInactive()));
+            assertFalse(Boolean.TRUE.equals(sku.getErpInactiveConfirmed()));
         }
 
         @Test
