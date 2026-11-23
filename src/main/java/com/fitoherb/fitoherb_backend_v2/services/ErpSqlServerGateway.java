@@ -32,11 +32,10 @@ public class ErpSqlServerGateway implements ErpCatalogGateway {
             "  NULLIF(LTRIM(RTRIM(m.Nome_Marc)), '') AS brand_name, " +
             "  NULLIF(LTRIM(RTRIM(t.descricao_tppro)), '') AS category_label, " +
             "  CAST(ISNULL(p.inativo_pro, 0) AS BIT) AS inativo_pro, " +
-            "  CASE WHEN e.Codigo IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS in_externo_01 " +
+            "  CAST(0 AS BIT) AS in_externo_01 " +
             "FROM [dbo].[Produtos] p WITH (NOLOCK) " +
-            "LEFT JOIN [dbo].[Marca] m WITH (NOLOCK) ON m.Id_Marc = p.Marca_Pro " +
-            "LEFT JOIN [dbo].[TipoProd] t WITH (NOLOCK) ON t.cod_tppro = p.tipoprod_pro " +
-            "LEFT JOIN [Externo01].[Produto] e WITH (NOLOCK) ON e.Codigo = p.Id_Pro " +
+            "LEFT JOIN [dbo].[Marca] m WITH (NOLOCK) ON m.ID_Marc = p.Marca_Pro AND m.Empresa_Marc = p.Empresa_Pro " +
+            "LEFT JOIN [dbo].[TipoProd] t WITH (NOLOCK) ON t.Id_TpPro = p.tipo_pro AND t.Empresa_TpPro = p.Empresa_Pro " +
             "WHERE p.Empresa_Pro = 1 " +
             "  AND UPPER(LTRIM(RTRIM(ISNULL(t.descricao_tppro, '')))) NOT IN (" +
             "    'BRINDES', 'BRINDES/INV', 'IMOBILIZADO', 'AMOSTRA GRATIS', 'DIVERSOS', 'LINHA DIVERSOS'" +
@@ -94,6 +93,7 @@ public class ErpSqlServerGateway implements ErpCatalogGateway {
     @Override
     public List<ErpCatalogItemSnapshot> fetchFullCatalog() {
         if (host == null || host.isBlank() || username == null || username.isBlank()) {
+            log.warn("Configuração de conexão com SQL Server ERP Atrio ausente (host ou username não definidos).");
             throw new ServiceUnavailableException(
                     "ERP_CATALOG_UNAVAILABLE",
                     "Base de referência do ERP Atrio indisponível no momento para validar os códigos informados."
@@ -119,6 +119,19 @@ public class ErpSqlServerGateway implements ErpCatalogGateway {
             return items;
         } catch (ServiceUnavailableException e) {
             throw e;
+        } catch (SQLException e) {
+            String causeType = e.getCause() != null ? e.getCause().getClass().getSimpleName() : "none";
+            log.warn(
+                    "Falha ao consultar catálogo somente-leitura no SQL Server ERP Atrio: type={}, sqlState={}, errorCode={}, cause={}",
+                    e.getClass().getSimpleName(),
+                    e.getSQLState(),
+                    e.getErrorCode(),
+                    causeType
+            );
+            throw new ServiceUnavailableException(
+                    "ERP_CATALOG_UNAVAILABLE",
+                    "Base de referência do ERP Atrio indisponível no momento para validar os códigos informados."
+            );
         } catch (Exception e) {
             log.warn("Falha ao consultar catálogo somente-leitura no SQL Server ERP Atrio: {}", e.getClass().getSimpleName());
             throw new ServiceUnavailableException(
