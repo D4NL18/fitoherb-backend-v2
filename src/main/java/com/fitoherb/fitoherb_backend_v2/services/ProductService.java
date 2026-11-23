@@ -456,7 +456,7 @@ public class ProductService {
             sku.setSortOrder(i);
             sku.setErpInactive(isInactive);
             sku.setErpInactiveConfirmed(isInactive && Boolean.TRUE.equals(productReq.getAllowInactiveErp()));
-            sku.setErpLastVerifiedAt(now);
+            sku.setErpLastVerifiedAt(snap != null ? now : null);
             newSkus.add(sku);
         }
 

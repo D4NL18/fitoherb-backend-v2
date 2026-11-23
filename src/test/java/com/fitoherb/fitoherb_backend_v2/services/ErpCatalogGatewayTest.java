@@ -93,6 +93,14 @@ class ErpCatalogGatewayTest {
             assertTrue(upperSql.contains("AMOSTRA GRATIS"));
             assertTrue(upperSql.contains("DIVERSOS"));
             assertTrue(upperSql.contains("LINHA DIVERSOS"));
+            assertTrue(upperSql.contains("T.ID_TPPRO = P.TIPO_PRO"), "LEFT JOIN TipoProd deve usar t.Id_TpPro = p.tipo_pro");
+            assertTrue(upperSql.contains("T.EMPRESA_TPPRO = P.EMPRESA_PRO"), "LEFT JOIN TipoProd deve usar t.Empresa_TpPro = p.Empresa_Pro");
+            assertTrue(upperSql.contains("M.ID_MARC = P.MARCA_PRO"), "LEFT JOIN Marca deve usar m.ID_Marc = p.Marca_Pro");
+            assertTrue(upperSql.contains("M.EMPRESA_MARC = P.EMPRESA_PRO"), "LEFT JOIN Marca deve usar m.Empresa_Marc = p.Empresa_Pro");
+            assertFalse(upperSql.contains("COD_TPPRO"), "Coluna inexistente cod_tppro deve ser removida");
+            assertFalse(upperSql.contains("TIPOPROD_PRO"), "Coluna inexistente tipoprod_pro deve ser removida");
+            assertFalse(upperSql.contains("[EXTERNO01].[PRODUTO]"), "JOIN com [Externo01].[Produto] deve ser removido");
+            assertTrue(upperSql.contains("CAST(0 AS BIT) AS IN_EXTERNO_01"), "Deve projetar CAST(0 AS BIT) AS in_externo_01");
 
             assertEquals(1, items.size());
             assertEquals(131476L, items.get(0).getErpCode());
